@@ -1,5 +1,5 @@
 # Xcode
-build/
+menu-stats/build/*
 DerivedData/
 *.xcuserstate
 *.xccheckout
