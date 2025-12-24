@@ -57,3 +57,11 @@
 
 - [x] task016 实现其他设置（刷新频率/单位）
   - 验证：设置可保存并生效
+
+## M6: Bug 修复
+
+- [ ] task017 修复 SMC 温度/风扇在 Apple Silicon 上不显示的问题 (issue001)
+  - 修正 SMCParamStruct 结构体布局（匹配 smctemp.h）
+  - 实现两步读取流程 (GetKeyInfo → ReadKey)
+  - 扩展 Apple Silicon 温度键列表
+  - 验证：在 M2 Pro / M4 上显示 CPU 温度

@@ -4,6 +4,23 @@
 
 ---
 
+## 2024-12-25
+
+### task017: 修复 SMC 温度/风扇 Apple Silicon 兼容性 (issue001) - 进行中
+
+- **Modify** `SystemMonitor.swift` - SMCInfo 模块重构
+  - 修正 SMCParamStruct 及嵌套结构体布局（匹配 smctemp.h）
+  - 移除错误的 `padding: UInt16` 字段
+  - 将 UInt8 改为 CChar 以匹配 C 结构体
+  - 实现两步读取: kSMCGetKeyInfo(9) → kSMCReadKey(5)
+  - 扩展 Apple Silicon 温度键: Tc0a/Tc0b/Tc0x/Tc0z, Tp01-Tp1l
+  - 添加 debugSMC() 调试函数，输出到 `/tmp/menu-stats-smc-debug.log`
+- **Modify** `AppDelegate.swift` - 启动时调用 SMCInfo.debugSMC()
+- **Add** `.phrase/docs/ISSUES.md` - 问题索引
+- **Add** `.phrase/phases/phase-mvp-20241224/issue_smc_20241225.md` - issue001 详情
+
+---
+
 ## 2024-12-24
 
 ### task017: SMC 温度和风扇读取

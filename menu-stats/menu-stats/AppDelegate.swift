@@ -59,6 +59,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Monitoring
     
     private func startMonitoring() {
+        // Debug SMC access
+        SMCInfo.debugSMC()
+        
         let monitor = SystemMonitor.shared
         let settings = SettingsManager.shared
         monitor.startMonitoring(interval: settings.refreshRate.interval)

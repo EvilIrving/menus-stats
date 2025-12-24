@@ -397,38 +397,87 @@ enum GPUInfo {
 
 import IOKit.ps
 
+/// SMC access for temperature and fan speed
+/// Based on AppleSMC.kext interface - struct size must be exactly 80 bytes
 enum SMCInfo {
     
     // SMC connection
     private static var conn: io_connect_t = 0
     
+    // MARK: - SMC Selectors
+    private static let kSMCReadKey: CChar = 5
+    private static let kSMCGetKeyInfo: CChar = 9
+    
     // MARK: - Public API
+    
+    /// Debug function to test SMC access
+    static func debugSMC() {
+        var log = "[SMC Debug] Testing SMC access...\n"
+        log += "[SMC Debug] SMCParamStruct size: \(MemoryLayout<SMCParamStruct>.size) bytes\n"
+        log += "[SMC Debug] SMCParamStruct stride: \(MemoryLayout<SMCParamStruct>.stride) bytes\n"
+        
+        guard open() else {
+            log += "[SMC Debug] Failed to open SMC connection\n"
+            writeDebugLog(log)
+            return
+        }
+        defer { close() }
+        log += "[SMC Debug] SMC connection opened successfully\n"
+        
+        // Test reading some keys
+        let testKeys = ["Tc0a", "Tc0b", "Tp01", "Tp09", "TC0P", "FNum", "F0Ac"]
+        for key in testKeys {
+            if let data = readKey(key) {
+                let hexStr = data.map { String(format: "%02X", $0) }.joined(separator: " ")
+                log += "[SMC Debug] Key '\(key)': \(hexStr)\n"
+            } else {
+                log += "[SMC Debug] Key '\(key)': not found\n"
+            }
+        }
+        
+        writeDebugLog(log)
+    }
+    
+    private static func writeDebugLog(_ content: String) {
+        let path = "/tmp/menu-stats-smc-debug.log"
+        try? content.write(toFile: path, atomically: true, encoding: .utf8)
+    }
     
     static func getCPUTemperature() -> Double? {
         guard open() else {
-            print("[SMC] Failed to open SMC connection")
             return nil
         }
         defer { close() }
         
-        // Try multiple temperature keys for different Mac models
-        let tempKeys = [
-            "TC0P",  // CPU Proximity (Intel)
-            "TC0C",  // CPU Core (Intel)
-            "Tp09",  // CPU efficiency core 1 (Apple Silicon)
-            "Tp0T",  // CPU performance core 1 (Apple Silicon)
-            "TC0p",  // Alternative
-            "TC0c",  // Alternative
+        // Apple Silicon M-series temperature keys (M1/M2/M3/M4)
+        // Based on https://github.com/narugit/smctemp
+        let applesSiliconKeys = [
+            // CPU temperature sensors (from smctemp)
+            "Tc0a", "Tc0b", "Tc0x", "Tc0z",  // CPU cluster temps
+            "Tp01", "Tp05", "Tp09", "Tp0D", "Tp0H", "Tp0L", "Tp0P", "Tp0T",
+            "Tp0X", "Tp0b", "Tp0f", "Tp0j", "Tp0n", "Tp0r",  // P-cores
+            "Tp1h", "Tp1t", "Tp1p", "Tp1l",  // More P-cores (Pro/Max/Ultra)
         ]
         
-        for key in tempKeys {
-            if let temp = readSMCTemperature(key: key), temp > 0 && temp < 150 {
-                print("[SMC] Got temperature \(temp) from key \(key)")
+        // Intel Mac temperature keys
+        let intelKeys = [
+            "TC0P", "TC0C", "TC0D", "TC0E", "TC0F",
+        ]
+        
+        // Try Apple Silicon keys first (since user has M2 Pro / M4)
+        for key in applesSiliconKeys {
+            if let temp = readTemperature(key: key), temp > 0 && temp < 150 {
                 return temp
             }
         }
         
-        print("[SMC] No valid temperature found")
+        // Fallback to Intel keys
+        for key in intelKeys {
+            if let temp = readTemperature(key: key), temp > 0 && temp < 150 {
+                return temp
+            }
+        }
+        
         return nil
     }
     
@@ -436,26 +485,23 @@ enum SMCInfo {
         guard open() else { return nil }
         defer { close() }
         
-        // Try to read fan count
-        guard let count = readSMCInt(key: "FNum"), count > 0 else {
-            // Apple Silicon Macs may not have traditional fan reporting
-            // Try direct fan key
-            if let speed = readSMCFanSpeed(key: "F0Ac"), speed > 0 {
-                return speed
-            }
-            return nil
-        }
-        
-        // Read max speed from all fans
-        var maxSpeed = 0
-        for i in 0..<count {
-            let key = String(format: "F%dAc", i)
-            if let speed = readSMCFanSpeed(key: key), speed > maxSpeed {
-                maxSpeed = speed
+        // Try to read fan count first
+        if let countData = readKey("FNum"), !countData.isEmpty {
+            let count = Int(countData[0])
+            if count > 0 {
+                // Read speed from first fan
+                if let speed = readFanSpeed(index: 0), speed > 0 {
+                    return speed
+                }
             }
         }
         
-        return maxSpeed > 0 ? maxSpeed : nil
+        // Apple Silicon or fallback: try direct fan key
+        if let speed = readFanSpeed(index: 0), speed > 0 {
+            return speed
+        }
+        
+        return nil
     }
     
     // MARK: - SMC Connection
@@ -463,24 +509,19 @@ enum SMCInfo {
     private static func open() -> Bool {
         if conn != 0 { return true }
         
-        var service: io_service_t = 0
-        var result: kern_return_t = 0
-        
-        service = IOServiceGetMatchingService(
+        let service = IOServiceGetMatchingService(
             kIOMainPortDefault,
             IOServiceMatching("AppleSMC")
         )
         
-        if service == 0 {
-            print("[SMC] AppleSMC service not found")
+        guard service != 0 else {
             return false
         }
         
-        result = IOServiceOpen(service, mach_task_self_, 0, &conn)
+        let result = IOServiceOpen(service, mach_task_self_, 0, &conn)
         IOObjectRelease(service)
         
-        if result != kIOReturnSuccess {
-            print("[SMC] Failed to open service: \(result)")
+        guard result == kIOReturnSuccess else {
             conn = 0
             return false
         }
@@ -495,59 +536,83 @@ enum SMCInfo {
         }
     }
     
-    // MARK: - SMC Read
+    // MARK: - Read Helpers
     
-    private static func readSMCTemperature(key: String) -> Double? {
-        guard let data = readSMCBytes(key: key, size: 2) else { return nil }
+    private static func readTemperature(key: String) -> Double? {
+        guard let data = readKey(key), data.count >= 2 else { return nil }
         
         // SP78 format: signed fixed-point 7.8 (7 integer bits, 8 fractional bits)
         let value = Int16(bitPattern: UInt16(data[0]) << 8 | UInt16(data[1]))
         return Double(value) / 256.0
     }
     
-    private static func readSMCFanSpeed(key: String) -> Int? {
-        guard let data = readSMCBytes(key: key, size: 2) else { return nil }
+    private static func readFanSpeed(index: Int) -> Int? {
+        let key = String(format: "F%dAc", index)
+        guard let data = readKey(key), data.count >= 2 else { return nil }
         
-        // FPE2 format: unsigned fixed-point with 2 fractional bits (divide by 4)
+        // FPE2 format: unsigned fixed-point with 2 fractional bits
         let value = UInt16(data[0]) << 8 | UInt16(data[1])
         return Int(value) >> 2
     }
     
-    private static func readSMCInt(key: String) -> Int? {
-        guard let data = readSMCBytes(key: key, size: 1) else { return nil }
-        return Int(data[0])
-    }
+    // MARK: - Core SMC Read
     
-    private static func readSMCBytes(key: String, size: Int) -> [UInt8]? {
+    private static func readKey(_ key: String) -> [UInt8]? {
+        guard key.count == 4 else { return nil }
+        
+        let keyCode = fourCharCode(key)
+        
+        // Step 1: Get key info to know the data size
         var inputStruct = SMCParamStruct()
         var outputStruct = SMCParamStruct()
         
-        // Convert 4-char key to UInt32
-        guard key.count == 4 else { return nil }
-        inputStruct.key = fourCharCode(key)
-        inputStruct.keyInfo.dataSize = UInt32(size)
-        inputStruct.data8 = 5  // SMC_CMD_READ_BYTES
+        inputStruct.key = keyCode
+        inputStruct.data8 = kSMCGetKeyInfo
         
-        let inputSize = MemoryLayout<SMCParamStruct>.stride
-        var outputSize = MemoryLayout<SMCParamStruct>.stride
+        var outputSize = MemoryLayout<SMCParamStruct>.size
         
-        let result = IOConnectCallStructMethod(
+        var result = IOConnectCallStructMethod(
             conn,
-            2,  // kSMCUserClientOpen/kSMCReadKey
+            2,  // kSMCHandleYPCEvent
             &inputStruct,
-            inputSize,
+            MemoryLayout<SMCParamStruct>.size,
             &outputStruct,
             &outputSize
         )
         
-        guard result == kIOReturnSuccess else {
+        guard result == kIOReturnSuccess, outputStruct.result == 0 else {
+            return nil
+        }
+        
+        let dataSize = Int(outputStruct.keyInfo.dataSize)
+        guard dataSize > 0 && dataSize <= 32 else { return nil }
+        
+        // Step 2: Read the actual data
+        inputStruct = SMCParamStruct()
+        inputStruct.key = keyCode
+        inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize
+        inputStruct.data8 = kSMCReadKey
+        
+        outputStruct = SMCParamStruct()
+        outputSize = MemoryLayout<SMCParamStruct>.size
+        
+        result = IOConnectCallStructMethod(
+            conn,
+            2,  // kSMCHandleYPCEvent
+            &inputStruct,
+            MemoryLayout<SMCParamStruct>.size,
+            &outputStruct,
+            &outputSize
+        )
+        
+        guard result == kIOReturnSuccess, outputStruct.result == 0 else {
             return nil
         }
         
         // Extract bytes from output
         var bytes = [UInt8]()
         withUnsafeBytes(of: outputStruct.bytes) { ptr in
-            for i in 0..<min(size, 32) {
+            for i in 0..<dataSize {
                 bytes.append(ptr[i])
             }
         }
@@ -563,23 +628,39 @@ enum SMCInfo {
         return result
     }
     
-    // MARK: - SMC Structures
+    // MARK: - SMC Structures (must match AppleSMC.kext exactly)
+    // Based on smctemp.h from https://github.com/narugit/smctemp
+    
+    private struct SMCVersion {
+        var major: CChar = 0
+        var minor: CChar = 0
+        var build: CChar = 0
+        var reserved: CChar = 0
+        var release: UInt16 = 0
+    }
+    
+    private struct SMCPLimitData {
+        var version: UInt16 = 0
+        var length: UInt16 = 0
+        var cpuPLimit: UInt32 = 0
+        var gpuPLimit: UInt32 = 0
+        var memPLimit: UInt32 = 0
+    }
     
     private struct SMCKeyInfoData {
         var dataSize: UInt32 = 0
         var dataType: UInt32 = 0
-        var dataAttributes: UInt8 = 0
+        var dataAttributes: CChar = 0
     }
     
     private struct SMCParamStruct {
         var key: UInt32 = 0
-        var vers: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8) = (0, 0, 0, 0, 0, 0)
-        var plimitData: (UInt16, UInt16, UInt16, UInt16, UInt16, UInt16, UInt16, UInt16) = (0, 0, 0, 0, 0, 0, 0, 0)
-        var keyInfo: SMCKeyInfoData = SMCKeyInfoData()
-        var padding: UInt16 = 0
-        var result: UInt8 = 0
-        var status: UInt8 = 0
-        var data8: UInt8 = 0
+        var vers = SMCVersion()
+        var pLimitData = SMCPLimitData()
+        var keyInfo = SMCKeyInfoData()
+        var result: CChar = 0
+        var status: CChar = 0
+        var data8: CChar = 0
         var data32: UInt32 = 0
         var bytes: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
                     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
