@@ -439,6 +439,16 @@ struct CoreUsageRow: View {
     }
 }
 
+// MARK: - Memory Stat Item
+
+/// Memory stat item with label, value and tooltip for sorting
+struct MemoryStatItem: Identifiable {
+    let id = UUID()
+    let label: String
+    let value: UInt64
+    let tooltip: String
+}
+
 // MARK: - Cleanup Tab
 
 struct CleanupTabView: View {
@@ -452,6 +462,21 @@ struct CleanupTabView: View {
             memorySummaryHeader
             
             Divider()
+            
+            // Cache Section with Ring and Clear Button
+            // cacheSectionView
+            
+            Divider()
+            
+            // Detailed Memory Info Section (without cache indicators)
+            if appManager.detailedMemory != nil {
+                detailedMemorySection
+                
+                Divider()
+            }
+            
+            // App Count Header (above list)
+            appCountHeader
             
             // App List
             if appManager.runningApps.isEmpty {
@@ -481,7 +506,7 @@ struct CleanupTabView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("💾")
-                Text("内存使用中")
+                Text("内存占用")
                     .font(.system(size: 13))
                 Spacer()
                 Text("\(ByteFormatter.format(appManager.totalMemoryUsed)) / \(ByteFormatter.format(appManager.totalMemory))")
@@ -491,7 +516,7 @@ struct CleanupTabView: View {
                     .foregroundColor(.secondary)
             }
             
-            // Progress bar
+            // Progress bar with pressure-based color
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 4)
@@ -504,14 +529,6 @@ struct CleanupTabView: View {
                 }
             }
             .frame(height: 8)
-            
-            HStack {
-                Text("🚀")
-                Text("运行中 App: \(appManager.appCount) 个")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
         }
         .padding()
     }
@@ -521,14 +538,141 @@ struct CleanupTabView: View {
         return Double(appManager.totalMemoryUsed) / Double(appManager.totalMemory) * 100
     }
     
+    /// Memory bar color based on memory pressure level
     private var memoryBarColor: Color {
-        if memoryUsagePercent < 60 {
+        switch appManager.memoryPressure {
+        case .normal:
             return .green
-        } else if memoryUsagePercent < 85 {
+        case .warning:
             return .yellow
-        } else {
+        case .critical:
             return .red
         }
+    }
+    
+    // MARK: - Cache Section (Ring + Clear Button)
+    
+    private var purgeableMemory: UInt64 {
+        appManager.detailedMemory?.purgeable ?? 0
+    }
+    
+    private var purgeablePercent: Double {
+        guard appManager.totalMemory > 0 else { return 0 }
+        return Double(purgeableMemory) / Double(appManager.totalMemory) * 100
+    }
+    
+    private var cacheSectionView: some View {
+        HStack(spacing: 16) {
+            // Purgeable Ring
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                
+                Circle()
+                    .trim(from: 0, to: min(purgeablePercent / 100, 1.0))
+                    .stroke(Color.orange, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .animation(.easeInOut(duration: 0.5), value: purgeablePercent)
+                
+                VStack(spacing: 2) {
+                    Text(ByteFormatter.format(purgeableMemory))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                }
+            }
+            .frame(width: 60, height: 60)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("可清理内存")
+                    .font(.system(size: 12, weight: .medium))
+                Text("系统可释放的缓存数据")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            // Clear Cache Button
+            Button(action: clearCache) {
+                VStack(spacing: 4) {
+                    Image(systemName: "trash.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.orange)
+                    Text("清理")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            .help("清除可释放的系统缓存")
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+    }
+    
+    private func clearCache() {
+        // Trigger system memory cleanup by running purge command
+        // Note: This requires admin privileges, so we'll use a safer approach
+        Task {
+            await appManager.triggerMemoryCleanup()
+        }
+    }
+    
+    // MARK: - Detailed Memory Section
+    
+    /// Get sorted memory stats (by value descending)
+    private func getSortedMemoryStats(from mem: MemoryInfo.DetailedInfo) -> [MemoryStatItem] {
+        let stats: [MemoryStatItem] = [
+            MemoryStatItem(label: "活跃", value: mem.active,
+                          tooltip: "正在被应用程序使用的内存，最近被访问过"),
+            MemoryStatItem(label: "非活跃", value: mem.inactive,
+                          tooltip: "最近未被访问的内存，可能被重新分配"),
+            MemoryStatItem(label: "联动", value: mem.wired,
+                          tooltip: "系统核心使用的内存，不可被换出或释放"),
+            MemoryStatItem(label: "压缩", value: mem.compressed,
+                          tooltip: "被压缩以节省空间的内存数据"),
+            MemoryStatItem(label: "推测", value: mem.speculative,
+                          tooltip: "系统预读的数据，可被快速释放"),
+            MemoryStatItem(label: "文件缓存", value: mem.external,
+                          tooltip: "文件系统缓存，由系统自动管理"),
+            MemoryStatItem(label: "交换区", value: mem.swapUsed,
+                          tooltip: "已使用的磁盘交换空间，内存不足时启用"),
+            MemoryStatItem(label: "可清理", value: mem.purgeable,
+                          tooltip: "应用标记可丢弃的内存，系统可随时释放")
+        ]
+        return stats.sorted { $0.value > $1.value }
+    }
+    
+    private var detailedMemorySection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let mem = appManager.detailedMemory {
+                let sortedStats = getSortedMemoryStats(from: mem)
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 4) {
+                    ForEach(sortedStats) { stat in
+                        MemoryStatRow(label: stat.label, value: stat.value, tooltip: stat.tooltip)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - App Count Header
+    
+    private var appCountHeader: some View {
+        HStack {
+            Text("🚀")
+            Text("运行中 App: \(appManager.runningApps.count) 个")
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 6)
+        .background(Color.gray.opacity(0.05))
     }
     
     // MARK: - App List
@@ -565,6 +709,36 @@ struct CleanupTabView: View {
             appToTerminate = app
             showForceTerminateAlert = true
         }
+    }
+}
+
+// MARK: - Memory Stat Row
+
+struct MemoryStatRow: View {
+    let label: String
+    let value: UInt64
+    var tooltip: String = ""
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(ByteFormatter.format(value))
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(.primary)
+        }
+        .padding(.vertical, 2)
+        .padding(.horizontal, 4)
+        .background(isHovered ? Color.gray.opacity(0.1) : Color.clear)
+        .cornerRadius(4)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .help(tooltip)
     }
 }
 
