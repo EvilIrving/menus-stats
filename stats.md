@@ -849,14 +849,9 @@ Background Thread (Reader)
 - CPU 频率：多次采样平均，提高准确性
 - 网络流量：差值计算，避免累积误差
 
-#### 4. 条件编译
-
-使用 `#if arch(arm64)` 区分 Intel 和 Apple Silicon 的代码路径，避免无效调用。
 
 #### 5. 能耗管理
 
-- 可配置的更新间隔
-- Sensors 和 Bluetooth 模块禁用可节省 50% CPU
 - Popup 关闭时暂停高耗资源的 Reader
 
 ---

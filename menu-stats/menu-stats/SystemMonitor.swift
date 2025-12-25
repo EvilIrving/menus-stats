@@ -528,8 +528,8 @@ enum SMCInfo {
     private static var conn: io_connect_t = 0
     
     // MARK: - SMC Selectors
-    private static let kSMCReadKey: CChar = 5
-    private static let kSMCGetKeyInfo: CChar = 9
+    private static let kSMCReadKey: UInt8 = 5
+    private static let kSMCGetKeyInfo: UInt8 = 9
     
     // MARK: - Public API
     
@@ -673,9 +673,25 @@ enum SMCInfo {
         let key = String(format: "F%dAc", index)
         guard let data = readKey(key), data.count >= 2 else { return nil }
         
-        // FPE2 format: unsigned fixed-point with 2 fractional bits
+        // M4 and newer chips use flt (Float) format: 4 bytes little-endian
+        if data.count >= 4 {
+            // Try float format first (used by M4)
+            let floatValue = data.withUnsafeBytes { ptr -> Float in
+                ptr.load(as: Float.self)
+            }
+            if floatValue > 0 && floatValue < 10000 {
+                return Int(floatValue)
+            }
+        }
+        
+        // Fallback to FPE2 format: unsigned fixed-point with 2 fractional bits
         let value = UInt16(data[0]) << 8 | UInt16(data[1])
-        return Int(value) >> 2
+        let fpe2Value = Int(value) >> 2
+        if fpe2Value > 0 && fpe2Value < 10000 {
+            return fpe2Value
+        }
+        
+        return nil
     }
     
     // MARK: - Core SMC Read
@@ -773,7 +789,7 @@ enum SMCInfo {
     private struct SMCKeyInfoData {
         var dataSize: UInt32 = 0
         var dataType: UInt32 = 0
-        var dataAttributes: CChar = 0
+        var dataAttributes: UInt8 = 0
     }
     
     private struct SMCParamStruct {
@@ -781,9 +797,10 @@ enum SMCInfo {
         var vers = SMCVersion()
         var pLimitData = SMCPLimitData()
         var keyInfo = SMCKeyInfoData()
-        var result: CChar = 0
-        var status: CChar = 0
-        var data8: CChar = 0
+        var padding: UInt16 = 0  // Required for correct struct size (80 bytes)
+        var result: UInt8 = 0
+        var status: UInt8 = 0
+        var data8: UInt8 = 0
         var data32: UInt32 = 0
         var bytes: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
                     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
