@@ -506,3 +506,107 @@ for app in runningApplications:
 
 - 无须自动化验证构建和运行
 - 用户自行在 Xcode 中构建并测试
+
+---
+
+## 十四、实现状态追踪
+
+> 最后更新：2024-12-25
+
+### 1. 状态栏
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| NSStatusItem 基础框架 | ✅ 已完成 | `AppDelegate.swift` |
+| 双行显示布局（值+标签） | ✅ 已完成 | `StatusBarView` |
+| Logo 显示 | ✅ 已完成 | 支持自定义图标 |
+| CPU 使用率显示 | ✅ 已完成 | 百分比格式 |
+| GPU 利用率显示 | ✅ 已完成 | 不可用时显示 N/A |
+| MEM 内存显示 | ✅ 已完成 | 百分比格式 |
+| DISK 磁盘显示 | ✅ 已完成 | 向上取整 GB |
+| NET 网络显示 | ✅ 已完成 | 上传/下载双行 |
+| FAN 风扇显示 | ✅ 已完成 | RPM 数值显示 |
+| 风扇旋转动画效果 | ❌ 未实现 | PRD 描述的模拟转动效果 |
+| 固定宽度格子 | ✅ 已完成 | 防止数值抖动 |
+| 显示项开关 | ✅ 已完成 | 支持用户自定义 |
+| 至少一项验证 | ✅ 已完成 | 取消全部时自动保留 CPU |
+
+### 2. Popover 弹窗
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| Popover 基础框架 | ✅ 已完成 | `.transient` 行为 |
+| 双 Tab 结构（概览/清理释放） | ✅ 已完成 | - |
+| 设置按钮入口 | ✅ 已完成 | 右上角齿轮图标 |
+| 10 秒自动关闭 | ❌ 未实现 | 当前仅点击外部关闭 |
+
+### 3. 概览 Tab
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 圆环饼图（CPU/GPU/MEM） | ✅ 已完成 | `RingView` |
+| CPU 悬浮显示 System/User | ✅ 已完成 | `.help()` 修饰符 |
+| 温度显示 | ✅ 已完成 | SMC 读取，支持 ℃/℉ |
+| 风扇转速显示 | ✅ 已完成 | SMC 读取 |
+| 磁盘空间显示 | ✅ 已完成 | 可用/总量 |
+| 网络速度显示 | ✅ 已完成 | 实时上传/下载 |
+| 核心使用率列表 | ✅ 已完成 | 进度条 + 颜色渐变 |
+
+### 4. 清理释放 Tab
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 内存摘要区 | ✅ 已完成 | 进度条 + 颜色 |
+| 运行中 App 计数 | ✅ 已完成 | - |
+| 用户 App 列表 | ✅ 已完成 | 仅 regular apps |
+| 状态栏 App 列表 | ⚠️ 部分 | 代码中已注释，待启用 |
+| 进程合并显示 | ✅ 已完成 | 进程树追溯 |
+| 按内存排序 | ✅ 已完成 | 降序 |
+| 悬浮显示关闭按钮 | ✅ 已完成 | 右推滑出动画 |
+| 关闭按钮 Tooltip | ✅ 已完成 | `.help()` 修饰符 |
+| 正常关闭 | ✅ 已完成 | `terminate()` |
+| 强制关闭弹窗 | ✅ 已完成 | Alert 二次确认 |
+| 多进程关闭处理 | ✅ 已完成 | 先主进程后子进程 |
+
+### 5. 设置页面
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 状态栏显示开关（7项） | ✅ 已完成 | Checkbox 列表 |
+| 刷新频率设置 | ✅ 已完成 | 低/中/高 |
+| 温度单位设置 | ✅ 已完成 | ℃/℉ |
+| 网速单位设置 | ✅ 已完成 | 自动/KB/s/MB/s |
+
+### 6. 技术实现
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| CPU 使用率（Mach API） | ✅ 已完成 | `CPUInfo` |
+| 单核 CPU 使用率 | ✅ 已完成 | `host_processor_info` |
+| GPU 利用率（IOKit） | ✅ 已完成 | `GPUInfo` |
+| 内存统计（vm_statistics64） | ✅ 已完成 | `MemoryInfo` |
+| 磁盘信息（FileManager） | ✅ 已完成 | `DiskInfo` |
+| 网络速度（getifaddrs） | ✅ 已完成 | `NetworkInfo` |
+| 温度/风扇（SMC） | ✅ 已完成 | `SMCInfo` |
+| App 内存（task_for_pid） | ✅ 已完成 | `AppMemoryManager` |
+| 进程树构建（ppid） | ✅ 已完成 | `AppMemoryManager` |
+| UserDefaults 持久化 | ✅ 已完成 | `SettingsManager` |
+
+### 7. 代码文件结构
+
+```
+menu-stats/menu-stats/
+├── menu_statsApp.swift      # App 入口
+├── AppDelegate.swift        # 状态栏管理 + Popover UI
+├── SystemMonitor.swift      # 系统监控核心逻辑
+├── AppMemoryManager.swift   # App 内存管理
+├── SettingsManager.swift    # 用户设置管理
+├── SettingsView.swift       # 设置页面 UI
+└── Assets.xcassets/         # 资源文件
+```
+
+---
+
+## 开源实现
+
+https://github.com/exelban/stats
