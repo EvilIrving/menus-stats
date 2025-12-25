@@ -65,3 +65,44 @@
   - 实现两步读取流程 (GetKeyInfo → ReadKey)
   - 扩展 Apple Silicon 温度键列表
   - 验证：在 M2 Pro / M4 上显示 CPU 温度
+
+## M7: 内存详细信息增强
+
+- [x] task018 实现详细内存指标采集（Active/Inactive/Wired/Compressed/Speculative/Purgeable/External）
+  - 扩展 MemoryInfo.DetailedInfo 结构体
+  - 使用 host_statistics64 + HOST_VM_INFO64 获取 vm_statistics64 数据
+  - 验证：调用 getDetailedMemoryInfo() 返回各内存组件值
+
+- [x] task019 实现内存压力等级采集（Normal/Warning/Critical）
+  - 使用 sysctlbyname("kern.memorystatus_vm_pressure_level") 获取压力等级
+  - 添加 MemoryPressureLevel 枚举类型
+  - 验证：getMemoryPressureLevel() 返回正确的压力等级
+
+- [x] task020 实现清理释放 Tab 中间信息区 UI 展示
+  - 在 CleanupTabView 中添加 detailedMemorySection
+  - 使用 LazyVGrid 展示 7 项内存指标
+  - 验证：清理释放 Tab 显示 Active/Inactive/Wired/Compressed/Speculative/Purgeable/External
+
+- [x] task021 实现进度条颜色随内存压力变化
+  - memoryBarColor 根据 memoryPressure 等级返回绿/黄/红
+  - 验证：进度条颜色随系统内存压力动态变化
+
+## M8: 清理释放 Tab UI 优化
+
+- [x] task023 顶部摘要区优化 - "内存使用中"改为"内存占用"
+  - 验证：摘要区标题显示"内存占用"
+
+- [x] task024 App运行数量移到列表上方，修复appCount与列表不一致问题
+  - 新增 appCountHeader 组件，置于列表上方
+  - 使用 runningApps.count 而非 appCount 确保一致
+  - 验证：App 数量显示在列表上方，与实际列表项数一致
+
+- [x] task025 新增缓存环形图和一键清除缓存按钮（横向并排）
+  - 新增 cacheSectionView 组件
+  - 环形图显示 Purgeable + External 缓存占比
+  - 清除缓存按钮触发 triggerMemoryCleanup()
+  - 验证：缓存区域显示环形图和清除按钮
+
+- [x] task026 指标区移除Purgeable和External缓存指标
+  - detailedMemorySection 仅显示 5 项指标
+  - 验证：指标区不显示缓存类指标

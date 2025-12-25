@@ -6,6 +6,39 @@
 
 ## 2024-12-25
 
+### task023-026: 清理释放 Tab UI 优化
+
+- **Modify** `AppDelegate.swift` - CleanupTabView 全面重构
+  - 修改 "内存使用中" 为 "内存占用"
+  - 新增 `cacheSectionView` 缓存操作区（环形图 + 清除按钮）
+  - 新增 `appCountHeader` 组件，置于列表上方
+  - 修改 `detailedMemorySection` 移除缓存指标
+  - 修复 App 数量显示使用 `runningApps.count`
+- **Modify** `AppMemoryManager.swift` - 新增内存清理功能
+  - 新增 `triggerMemoryCleanup()` 方法
+  - 通过内存压力模拟触发系统清理
+- **Modify** `docs/ram_prd.md` - 更新界面布局文档
+  - 新增 3.2 缓存操作区说明
+  - 修改 3.3 内存指标区（移除缓存类）
+  - 修改 3.4 App 占用列表（数量移至列表上方）
+
+### task018-021: 内存详细信息增强 (ram_prd.md 第 3.2 节)
+
+- **Modify** `SystemMonitor.swift` - 扩展 MemoryInfo 模块
+  - 新增 `MemoryPressureLevel` 枚举（Normal/Warning/Critical）
+  - 新增 `MemoryInfo.DetailedInfo` 结构体，包含 7 项内存指标
+  - 新增 `getDetailedMemoryInfo()` 获取详细内存统计
+  - 新增 `getMemoryPressureLevel()` 通过 sysctl 获取内存压力
+  - 新增 `getSwapUsage()` 获取交换区使用情况
+- **Modify** `AppMemoryManager.swift` - 支持详细内存数据
+  - 新增 `detailedMemory: MemoryInfo.DetailedInfo?` 属性
+  - 新增 `memoryPressure: MemoryPressureLevel` 属性
+  - 修改 `updateRunningApps()` 使用 `getDetailedMemoryInfo()`
+- **Modify** `AppDelegate.swift` - CleanupTabView UI 增强
+  - 新增 `detailedMemorySection` 中间信息区
+  - 新增 `MemoryStatRow` 组件展示单项内存指标
+  - 修改 `memoryBarColor` 根据内存压力等级返回颜色
+
 ### task017: 修复 SMC 温度/风扇 Apple Silicon 兼容性 (issue001) - 进行中
 
 - **Modify** `SystemMonitor.swift` - SMCInfo 模块重构
