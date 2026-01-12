@@ -523,10 +523,14 @@ import IOKit.ps
 /// SMC access for temperature and fan speed
 /// Based on AppleSMC.kext interface - struct size must be exactly 80 bytes
 enum SMCInfo {
-    
+
     // SMC connection
     private static var conn: io_connect_t = 0
-    
+
+    // Temperature cache for stability
+    private static var cachedTemperature: Double? = nil
+    private static let maxCacheAge: TimeInterval = 10  // 10 seconds
+
     // MARK: - SMC Selectors
     private static let kSMCReadKey: UInt8 = 5
     private static let kSMCGetKeyInfo: UInt8 = 9
@@ -567,41 +571,66 @@ enum SMCInfo {
     }
     
     static func getCPUTemperature() -> Double? {
+        var debugLog = "[Temperature Debug] Starting...\n"
+        
         guard open() else {
-            return nil
+            debugLog += "[Temperature Debug] Failed to open SMC connection\n"
+            writeDebugLog(debugLog)
+            return cachedTemperature
         }
         defer { close() }
         
-        // Apple Silicon M-series temperature keys (M1/M2/M3/M4)
-        // Based on https://github.com/narugit/smctemp
-        let applesSiliconKeys = [
-            // CPU temperature sensors (from smctemp)
-            "Tc0a", "Tc0b", "Tc0x", "Tc0z",  // CPU cluster temps
-            "Tp01", "Tp05", "Tp09", "Tp0D", "Tp0H", "Tp0L", "Tp0P", "Tp0T",
-            "Tp0X", "Tp0b", "Tp0f", "Tp0j", "Tp0n", "Tp0r",  // P-cores
-            "Tp1h", "Tp1t", "Tp1p", "Tp1l",  // More P-cores (Pro/Max/Ultra)
+        debugLog += "[Temperature Debug] SMC connection opened\n"
+
+        let cpuTempKeys = [
+            // Apple Silicon SOC 温度
+            "Te05",
+            // Apple Silicon CPU Package
+            "Tp01", "Tp05", "Tp09", "Tp0D", "Tp0Y", "Tp0b", "Tp0e",
+            // 风扇区域温度
+            "Tf04", "Tf09", "Tf0A", "Tf0B", "Tf0E",
         ]
-        
-        // Intel Mac temperature keys
-        let intelKeys = [
-            "TC0P", "TC0C", "TC0D", "TC0E", "TC0F",
-        ]
-        
-        // Try Apple Silicon keys first (since user has M2 Pro / M4)
-        for key in applesSiliconKeys {
-            if let temp = readTemperature(key: key), temp > 0 && temp < 150 {
-                return temp
+
+        var temperatures: [Double] = []
+        for key in cpuTempKeys {
+            let result = readTemperatureDebug(key: key)
+            debugLog += result.log
+            
+            if let temp = result.temp {
+                // 放宽范围先收集数据: 5-115°C
+                if temp > 5 && temp < 115 {
+                    temperatures.append(temp)
+                    debugLog += "  -> ACCEPTED\n"
+                } else {
+                    debugLog += "  -> REJECTED (out of range 5-115)\n"
+                }
             }
         }
         
-        // Fallback to Intel keys
-        for key in intelKeys {
-            if let temp = readTemperature(key: key), temp > 0 && temp < 150 {
-                return temp
-            }
+        debugLog += "[Temperature Debug] Valid temperatures: \(temperatures)\n"
+        debugLog += "[Temperature Debug] Count: \(temperatures.count)\n"
+
+        guard !temperatures.isEmpty else {
+            debugLog += "[Temperature Debug] No valid temperatures, returning cache: \(String(describing: cachedTemperature))\n"
+            writeDebugLog(debugLog)
+            return cachedTemperature
+        }
+
+        let avgTemp = temperatures.reduce(0, +) / Double(temperatures.count)
+        debugLog += "[Temperature Debug] Average: \(avgTemp)\n"
+        
+        let smoothedTemp: Double
+        if let cached = cachedTemperature {
+            smoothedTemp = avgTemp * 0.7 + cached * 0.3
+        } else {
+            smoothedTemp = avgTemp
         }
         
-        return nil
+        cachedTemperature = smoothedTemp
+        debugLog += "[Temperature Debug] Final: \(smoothedTemp)\n"
+        writeDebugLog(debugLog)
+        
+        return smoothedTemp
     }
     
     static func getFanSpeed() -> Int? {
@@ -609,19 +638,32 @@ enum SMCInfo {
         defer { close() }
         
         // Try to read fan count first
+        var fanCount = 1
         if let countData = readKey("FNum"), !countData.isEmpty {
-            let count = Int(countData[0])
-            if count > 0 {
-                // Read speed from first fan
-                if let speed = readFanSpeed(index: 0), speed > 0 {
-                    return speed
+            fanCount = max(Int(countData[0]), 1)
+        }
+        
+        // Read all fans and return the maximum speed
+        var maxSpeed: Int? = nil
+        
+        for i in 0..<min(fanCount, 4) {
+            if let speed = readFanSpeed(index: i) {
+                if maxSpeed == nil || speed > maxSpeed! {
+                    maxSpeed = speed
                 }
             }
         }
         
-        // Apple Silicon or fallback: try direct fan key
-        if let speed = readFanSpeed(index: 0), speed > 0 {
+        // If we found valid fan data (even if 0 RPM), return it
+        if let speed = maxSpeed {
             return speed
+        }
+        
+        // Fallback: try indices 0-3 directly
+        for index in 0..<4 {
+            if let speed = readFanSpeed(index: index) {
+                return speed
+            }
         }
         
         return nil
@@ -661,34 +703,183 @@ enum SMCInfo {
     
     // MARK: - Read Helpers
     
-    private static func readTemperature(key: String) -> Double? {
-        guard let data = readKey(key), data.count >= 2 else { return nil }
+    /// 带调试信息的温度读取
+    private static func readTemperatureDebug(key: String) -> (temp: Double?, log: String) {
+        var log = "[Key: \(key)] "
         
-        // SP78 format: signed fixed-point 7.8 (7 integer bits, 8 fractional bits)
-        let value = Int16(bitPattern: UInt16(data[0]) << 8 | UInt16(data[1]))
-        return Double(value) / 256.0
+        guard key.count == 4 else {
+            log += "Invalid key length\n"
+            return (nil, log)
+        }
+        
+        let keyCode = fourCharCode(key)
+        
+        // Step 1: Get key info
+        var inputStruct = SMCParamStruct()
+        var outputStruct = SMCParamStruct()
+        
+        inputStruct.key = keyCode
+        inputStruct.data8 = kSMCGetKeyInfo
+        
+        var outputSize = MemoryLayout<SMCParamStruct>.size
+        
+        var result = IOConnectCallStructMethod(
+            conn,
+            2,
+            &inputStruct,
+            MemoryLayout<SMCParamStruct>.size,
+            &outputStruct,
+            &outputSize
+        )
+        
+        guard result == kIOReturnSuccess else {
+            log += "GetKeyInfo failed (IOConnect error: \(result))\n"
+            return (nil, log)
+        }
+        
+        guard outputStruct.result == 0 else {
+            log += "GetKeyInfo failed (SMC result: \(outputStruct.result))\n"
+            return (nil, log)
+        }
+        
+        let dataSize = Int(outputStruct.keyInfo.dataSize)
+        let dataType = outputStruct.keyInfo.dataType
+        
+        // 转换 dataType 为可读字符串
+        let typeStr = String(format: "%c%c%c%c",
+                             (dataType >> 24) & 0xFF,
+                             (dataType >> 16) & 0xFF,
+                             (dataType >> 8) & 0xFF,
+                             dataType & 0xFF)
+        
+        log += "type='\(typeStr)' size=\(dataSize) "
+        
+        guard dataSize > 0 && dataSize <= 32 else {
+            log += "Invalid dataSize\n"
+            return (nil, log)
+        }
+        
+        // Step 2: Read actual data
+        inputStruct = SMCParamStruct()
+        inputStruct.key = keyCode
+        inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize
+        inputStruct.data8 = kSMCReadKey
+        
+        outputStruct = SMCParamStruct()
+        outputSize = MemoryLayout<SMCParamStruct>.size
+        
+        result = IOConnectCallStructMethod(
+            conn,
+            2,
+            &inputStruct,
+            MemoryLayout<SMCParamStruct>.size,
+            &outputStruct,
+            &outputSize
+        )
+        
+        guard result == kIOReturnSuccess, outputStruct.result == 0 else {
+            log += "ReadKey failed\n"
+            return (nil, log)
+        }
+        
+        // Extract bytes
+        var bytes = [UInt8]()
+        withUnsafeBytes(of: outputStruct.bytes) { ptr in
+            for i in 0..<dataSize {
+                bytes.append(ptr[i])
+            }
+        }
+        
+        let hexStr = bytes.map { String(format: "%02X", $0) }.joined(separator: " ")
+        log += "bytes=[\(hexStr)] "
+        
+        // Parse temperature
+        if let temp = parseTemperatureValue(bytes: bytes, typeStr: typeStr) {
+            if temp > 25 && temp < 115 {
+                log += "  -> ACCEPTED\n"
+                return (temp, log)
+            } else {
+                log += "  -> REJECTED (out of range 25-115)\n"
+                return (nil, log)
+            }
+        }
+        
+        log += "parsed=\(String(describing: nil))\n"
+        
+        return (nil, log)
     }
     
+    /// 根据类型字符串解析温度
+    private static func parseTemperatureValue(bytes: [UInt8], typeStr: String) -> Double? {
+        guard bytes.count >= 2 else { return nil }
+        
+        let trimmedType = typeStr.trimmingCharacters(in: .whitespaces)
+        
+        switch trimmedType {
+        case "sp78":
+            let value = Int16(bitPattern: UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
+            return Double(value) / 256.0
+            
+        case "sp87":
+            let value = Int16(bitPattern: UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
+            return Double(value) / 128.0
+            
+        case "sp96":
+            let value = Int16(bitPattern: UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
+            return Double(value) / 64.0
+            
+        case "flt":
+            guard bytes.count >= 4 else { return nil }
+            var floatValue: Float = 0
+            _ = withUnsafeMutableBytes(of: &floatValue) { dest in
+                bytes.prefix(4).enumerated().forEach { dest[$0.offset] = $0.element }
+            }
+            return Double(floatValue)
+            
+        case "ui8":
+            return Double(bytes[0])
+            
+        case "ui16":
+            let value = UInt16(bytes[0]) << 8 | UInt16(bytes[1])
+            return Double(value)
+            
+        default:
+            // 默认尝试 sp78
+            let value = Int16(bitPattern: UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
+            return Double(value) / 256.0
+        }
+    }
+
     private static func readFanSpeed(index: Int) -> Int? {
         let key = String(format: "F%dAc", index)
         guard let data = readKey(key), data.count >= 2 else { return nil }
         
-        // M4 and newer chips use flt (Float) format: 4 bytes little-endian
+        // M2/M3/M4 chips use flt (Float) format: 4 bytes little-endian
         if data.count >= 4 {
-            // Try float format first (used by M4)
             let floatValue = data.withUnsafeBytes { ptr -> Float in
                 ptr.load(as: Float.self)
             }
-            if floatValue > 0 && floatValue < 10000 {
+            // Allow 0 RPM (fan stopped) - valid range 0-10000
+            if floatValue >= 0 && floatValue < 10000 {
                 return Int(floatValue)
             }
         }
         
-        // Fallback to FPE2 format: unsigned fixed-point with 2 fractional bits
-        let value = UInt16(data[0]) << 8 | UInt16(data[1])
-        let fpe2Value = Int(value) >> 2
-        if fpe2Value > 0 && fpe2Value < 10000 {
-            return fpe2Value
+        let byte0 = Int(data[0])
+        let byte1 = Int(data[1])
+        
+        // Intel/M1 use FPE2 format: unsigned fixed-point with 2 fractional bits
+        // Variant 1: (byte0 << 6) | (byte1 >> 2)
+        let fpe2Variant1 = (byte0 << 6) | (byte1 >> 2)
+        if fpe2Variant1 >= 0 && fpe2Variant1 < 10000 {
+            return fpe2Variant1
+        }
+        
+        // Variant 2: (rawValue >> 2)
+        let rawValue = (byte0 << 8) | byte1
+        let fpe2Variant2 = rawValue >> 2
+        if fpe2Variant2 >= 0 && fpe2Variant2 < 10000 {
+            return fpe2Variant2
         }
         
         return nil
