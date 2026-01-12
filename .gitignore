@@ -24,7 +24,7 @@ Carthage/Checkouts/
 .AppleDouble
 .LSOverride
 ._*
-
+Mole/*
 # App packaging
 *.ipa
 *.dSYM.zip
@@ -37,6 +37,8 @@ playground.xcworkspace
 # IDE
 *.idea/
 *.vscode/
+*.qoder/
+*.phrase/
 
 # Archives
 *.xcarchive
