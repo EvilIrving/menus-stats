@@ -804,7 +804,7 @@ enum SMCInfo {
             }
         }
         
-        log += "parsed=\(String(describing: nil))\n"
+        log += "parsed=nil\n"
         
         return (nil, log)
     }
