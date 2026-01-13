@@ -35,10 +35,13 @@ struct ProcessBundleInfo {
         bundleId?.hasPrefix("com.apple.") == true
     }
     
-    /// 是否为系统路径（/System/ 或 /usr/）
+    /// 是否为系统路径（/System/、/usr/、/sbin/、/Library/Apple/ 等）
     var isSystemPath: Bool {
         guard let path = execPath else { return false }
-        return path.hasPrefix("/System/") || path.hasPrefix("/usr/")
+        return path.hasPrefix("/System/") || 
+               path.hasPrefix("/usr/") ||
+               path.hasPrefix("/sbin/") ||
+               path.hasPrefix("/Library/Apple/")
     }
     
     /// 判断是否为系统应用
@@ -85,7 +88,10 @@ struct AppGroup: Identifiable {
     /// 是否为系统路径
     var isSystemPath: Bool {
         guard let path = execPath else { return false }
-        return path.hasPrefix("/System/") || path.hasPrefix("/usr/")
+        return path.hasPrefix("/System/") || 
+               path.hasPrefix("/usr/") ||
+               path.hasPrefix("/sbin/") ||
+               path.hasPrefix("/Library/Apple/")
     }
     
     /// 是否为系统应用

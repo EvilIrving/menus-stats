@@ -133,7 +133,13 @@ func isSystemAppInWatchList(_ bundleId: String?) -> Bool {
 /// 判断进程是否应该显示
 /// - 第三方应用：默认显示
 /// - 系统服务/应用：只有在观察名单中才显示
+/// - 应用扩展（.appex）：默认不显示
 func shouldShowProcess(_ bundleInfo: ProcessBundleInfo) -> Bool {
+    // 过滤应用扩展（Widget、通知扩展等 .appex）
+    if let execPath = bundleInfo.execPath, execPath.contains(".appex/") {
+        return false
+    }
+    
     // 系统服务（无 .app bundle 的系统进程）
     if bundleInfo.isSystemPath && !bundleInfo.isInAppBundle {
         return false  // 系统服务默认不显示
