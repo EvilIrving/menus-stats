@@ -1,4 +1,4 @@
-# Menu Stats
+# Light Stats
 
 一款轻量级的 macOS 状态栏系统监控工具，让你在 3 秒内知道系统当前状态。
 
@@ -74,7 +74,7 @@ cd menus-stats
 1. 使用 Xcode 打开项目：
 
 ```bash
-open menu-stats/menu-stats.xcodeproj
+open "Light Stats.xcodeproj"
 ```
 
 1. 选择目标设备后点击 Run 或按 `Cmd + R` 构建运行
@@ -91,15 +91,16 @@ open menu-stats/menu-stats.xcodeproj
 ## 项目结构
 
 ```
-menu-stats/
-├── menu-stats/
+Light Stats/
+├── Light Stats/
 │   ├── AppDelegate.swift      # 应用入口、状态栏和弹出窗口管理
 │   ├── SystemMonitor.swift    # 系统监控核心（CPU/GPU/内存/磁盘/网络）
 │   ├── AppMemoryManager.swift # 应用内存管理
 │   ├── SettingsManager.swift  # 设置管理
 │   ├── SettingsView.swift     # 设置界面
-│   └── Assets.xcassets/       # 图标资源
-└── menu-stats.xcodeproj/      # Xcode 项目配置
+│   ├── Assets.xcassets/       # 图标资源
+│   └── LightStatsApp.swift    # App 结构定义
+└── Light Stats.xcodeproj/      # Xcode 项目配置
 ```
 
 ## 设计理念

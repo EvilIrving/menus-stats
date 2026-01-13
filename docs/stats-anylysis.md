@@ -2,7 +2,7 @@
 
 ## 文档概述
 
-本文档全面分析开源项目 Stats（exelban/stats）的技术实现方案、数据获取方法、系统 API 使用以及架构设计思路，为 swift-menu-stats 项目提供技术参考和借鉴依据。
+本文档全面分析开源项目 Stats（exelban/stats）的技术实现方案、数据获取方法、系统 API 使用以及架构设计思路，为 swift-Light Stats 项目提供技术参考和借鉴依据。
 
 ## 项目背景
 
@@ -1216,7 +1216,7 @@ rate = (current - previous) / interval
  
 ---
  
-### 对 swift-menu-stats 的借鉴价值
+### 对 swift-Light Stats 的借鉴价值
 
 | 方面 | 可借鉴内容 | 优先级 |
 |------|-----------|-------|

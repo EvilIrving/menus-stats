@@ -355,7 +355,7 @@ for app in runningApplications:
 ### 7. 代码文件结构
 
 ```
-menu-stats/menu-stats/
+Light Stats/Light Stats/
 ├── menu_statsApp.swift      # App 入口
 ├── AppDelegate.swift        # 状态栏管理 + Popover UI
 ├── SystemMonitor.swift      # 系统监控核心逻辑

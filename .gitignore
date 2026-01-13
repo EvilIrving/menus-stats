@@ -1,5 +1,5 @@
 # Xcode
-menu-stats/build/*
+Light Stats/build/*
 DerivedData/
 *.xcuserstate
 *.xccheckout
@@ -7,7 +7,7 @@ DerivedData/
 xcuserdata/
 stats-master/*
 # Swift Package Manager
-.build/
+build/
 .swiftpm/
 Packages/
 Package.resolved

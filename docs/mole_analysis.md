@@ -474,7 +474,7 @@ func ioBar(rate float64) string {
 
 ---
 
-## 7. 对 menu-stats 的借鉴价值
+## 7. 对 Light Stats 的借鉴价值
 
 ### 7.1 可复用的技术方案
 
