@@ -19,10 +19,11 @@ final class StatusBarView: NSView {
         static let fanItemWidth: CGFloat = 50      // FAN (e.g., "9999 RPM")
         static let separatorWidth: CGFloat = 2
         static let itemHeight: CGFloat = 22
+        static let arrowWidth: CGFloat = 8         // 箭头固定宽度
         static let valueFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
         static let labelFont = NSFont.systemFont(ofSize: 8, weight: .medium)
         static let logoFont = NSFont.systemFont(ofSize: 12, weight: .medium)
-        static let networkFont = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .medium)  // 网络上传下载专用
+        static let networkFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
     }
 
     // MARK: - Data
@@ -123,8 +124,8 @@ final class StatusBarView: NSView {
         // Network (上传在上，下载在下，字体相同间距紧凑)
         if settings.showNetwork {
             displayItems.append(DisplayItem(
-                value: "↑\(ByteFormatter.formatSpeed(upload))",
-                label: "↓\(ByteFormatter.formatSpeed(download))",
+                value: ByteFormatter.formatSpeed(upload),
+                label: ByteFormatter.formatSpeed(download),
                 width: Layout.networkItemWidth,
                 isLogo: false,
                 isNetwork: true
@@ -214,28 +215,37 @@ final class StatusBarView: NSView {
                     image.draw(in: iconRect)
                 }
             } else if item.isNetwork {
-                // 网络项特殊绘制：上传下载字体相同，间距紧凑
+                // 网络项特殊绘制：箭头固定，数值等宽
                 let netAttrs: [NSAttributedString.Key: Any] = [
                     .font: Layout.networkFont,
                     .foregroundColor: textColor
                 ]
-                let lineSpacing: CGFloat = 1  // 紧凑间距
+                let lineSpacing: CGFloat = 0 
+                let arrowXOffset: CGFloat = 2 
+                let globalYOffset: CGFloat = -1 // 整体下移 1 单位
 
-                // 上传 (上行)
-                let uploadSize = item.value.size(withAttributes: netAttrs)
-                let uploadPoint = NSPoint(
-                    x: itemRect.midX - uploadSize.width / 2,
-                    y: itemRect.midY + lineSpacing / 2
-                )
-                item.value.draw(at: uploadPoint, withAttributes: netAttrs)
+                // 绘制上传 (上行)
+                let upArrow = "↑"
+                let upValue = item.value
+                
+                let upArrowPoint = NSPoint(x: itemRect.origin.x + arrowXOffset, y: itemRect.midY + lineSpacing + globalYOffset)
+                upArrow.draw(at: upArrowPoint, withAttributes: netAttrs)
+                
+                let upValuePoint = NSPoint(x: itemRect.origin.x + arrowXOffset + Layout.arrowWidth, y: itemRect.midY + lineSpacing + globalYOffset)
+                upValue.draw(at: upValuePoint, withAttributes: netAttrs)
 
-                // 下载 (下行)
-                let downloadSize = item.label.size(withAttributes: netAttrs)
-                let downloadPoint = NSPoint(
-                    x: itemRect.midX - downloadSize.width / 2,
-                    y: itemRect.midY - downloadSize.height - lineSpacing / 2
-                )
-                item.label.draw(at: downloadPoint, withAttributes: netAttrs)
+                // 绘制下载 (下行)
+                let downArrow = "↓"
+                let downValue = item.label
+                
+                let textHeight = item.label.size(withAttributes: netAttrs).height
+                let downY = itemRect.midY - textHeight + 1 + globalYOffset
+                
+                let downArrowPoint = NSPoint(x: itemRect.origin.x + arrowXOffset, y: downY)
+                downArrow.draw(at: downArrowPoint, withAttributes: netAttrs)
+                
+                let downValuePoint = NSPoint(x: itemRect.origin.x + arrowXOffset + Layout.arrowWidth, y: downY)
+                downValue.draw(at: downValuePoint, withAttributes: netAttrs)
             } else {
                 // Draw value (top) - larger font, positioned closer to center
                 let valueAttrs: [NSAttributedString.Key: Any] = [

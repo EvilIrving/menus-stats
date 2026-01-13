@@ -82,18 +82,18 @@ final class SettingsManager: ObservableObject {
         
         var displayName: String {
             switch self {
-            case .celsius: return "℃"
-            case .fahrenheit: return "℉"
+            case .celsius: return "°C"
+            case .fahrenheit: return "°F"
             }
         }
         
         func format(_ celsius: Double) -> String {
             switch self {
             case .celsius:
-                return String(format: "%.0f℃", celsius)
+                return String(format: "%.0f°C", celsius)
             case .fahrenheit:
                 let fahrenheit = celsius * 9 / 5 + 32
-                return String(format: "%.0f℉", fahrenheit)
+                return String(format: "%.0f°F", fahrenheit)
             }
         }
     }

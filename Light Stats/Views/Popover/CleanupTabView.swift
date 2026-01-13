@@ -77,7 +77,6 @@ struct CleanupTabView: View {
     private var memorySummaryHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("💾")
                 Text("内存占用")
                     .font(.system(size: 13))
                 Spacer()
@@ -236,7 +235,6 @@ struct CleanupTabView: View {
 
     private var appCountHeader: some View {
         HStack {
-            Text("🚀")
             Text("运行中 App: \(appManager.runningApps.count) 个")
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)

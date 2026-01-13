@@ -15,10 +15,10 @@ struct StatusRow: View {
 
     var body: some View {
         HStack {
-            Text(icon)
+            if !icon.isEmpty {
+                Text(icon)
+            }
             Text(label)
-                .font(.system(size: 13))
-                .foregroundColor(.secondary)
             Spacer()
             Text(value)
                 .font(.system(size: 13, weight: .medium, design: .monospaced))

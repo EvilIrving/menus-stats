@@ -319,7 +319,7 @@ enum SMCInfo {
         case "flt":
             guard bytes.count >= 4 else { return nil }
             var floatValue: Float = 0
-            _ = withUnsafeMutableBytes(of: &floatValue) { dest in
+            withUnsafeMutableBytes(of: &floatValue) { dest in
                 bytes.prefix(4).enumerated().forEach { dest[$0.offset] = $0.element }
             }
             return Double(floatValue)

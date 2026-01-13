@@ -71,35 +71,35 @@ struct OverviewTabView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Load Average (above temperature)
             StatusRow(
-                icon: "⚡️",
+                icon: "",
                 label: "负载",
                 value: monitor.loadAverage.displayString
             )
             
             // Temperature
             if let temp = monitor.cpuTemperature {
-                StatusRow(icon: "🌡️", label: "温度", value: String(format: "%.0f℃", temp))
+                StatusRow(icon: "", label: "温度", value: String(format: "%.0f°C", temp))
             } else {
-                StatusRow(icon: "🌡️", label: "温度", value: "N/A", isAvailable: false)
+                StatusRow(icon: "", label: "温度", value: "N/A", isAvailable: false)
             }
 
             // Fan
             if let fan = monitor.fanSpeed {
-                StatusRow(icon: "🌀", label: "风扇", value: "\(fan) RPM")
+                StatusRow(icon: "", label: "风扇", value: "\(fan) RPM")
             } else {
-                StatusRow(icon: "🌀", label: "风扇", value: "N/A", isAvailable: false)
+                StatusRow(icon: "", label: "风扇", value: "N/A", isAvailable: false)
             }
 
             // Disk
             StatusRow(
-                icon: "💾",
+                icon: "",
                 label: "磁盘",
                 value: "可用 \(ByteFormatter.format(monitor.diskAvailable)) / 共 \(ByteFormatter.format(monitor.diskTotal))"
             )
 
             // Network
             StatusRow(
-                icon: "🌐",
+                icon: "",
                 label: "网络",
                 value: "⬆ \(ByteFormatter.formatSpeed(monitor.networkUpload))   ⬇ \(ByteFormatter.formatSpeed(monitor.networkDownload))"
             )
@@ -112,7 +112,7 @@ struct OverviewTabView: View {
     private var topProcessesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("✲ Processes")
+                Text("Processes")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.secondary)
                 Spacer()
