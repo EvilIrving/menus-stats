@@ -43,6 +43,12 @@ struct CleanupTabView: View {
         }
         .onAppear {
             appManager.startMonitoring()
+            
+                    // 临时调试：打印 Bundle 信息
+                    Task {
+                        await appManager.debugPrintAllProcessBundleInfo()
+                    }
+                 
         }
         .alert("应用未响应", isPresented: $showForceTerminateAlert) {
             Button("强制关闭", role: .destructive) {

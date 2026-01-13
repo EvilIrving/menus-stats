@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		A4163D492EFBC3DB0013ED8C /* menu-stats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "menu-stats.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A475FD742F164E9000806CD9 /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
 		A4C320BF2F1615F600BA764B /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
 		A4C321922F16296600BA764B /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
 		A4C321D92F16306D00BA764B /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
@@ -58,6 +59,11 @@
 			children = (
 				A4163D492EFBC3DB0013ED8C /* menu-stats.app */,
 			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A475FD762F164E9000806CD9 /* Products */ = {
+			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -132,6 +138,10 @@
 				{
 					ProductGroup = A4C320C12F1615F600BA764B /* Products */;
 					ProjectRef = A4C320BF2F1615F600BA764B /* menu-stats.xcodeproj */;
+				},
+				{
+					ProductGroup = A475FD762F164E9000806CD9 /* Products */;
+					ProjectRef = A475FD742F164E9000806CD9 /* menu-stats.xcodeproj */;
 				},
 				{
 					ProductGroup = A4C321942F16296600BA764B /* Products */;
