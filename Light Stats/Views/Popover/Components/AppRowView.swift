@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AppRowView: View {
+struct AppCardView: View {
     let app: RunningApp
     let onClose: () -> Void
 
@@ -19,11 +19,11 @@ struct AppRowView: View {
             Image(nsImage: app.icon)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 32, height: 32)
+                .frame(width: 28, height: 28)
 
-            // App Name (shows process count if multiple)
+            // App Name
             Text(app.displayName)
-                .font(.system(size: 13))
+                .font(.system(size: 13, weight: .medium))
                 .lineLimit(1)
 
             Spacer()
@@ -33,24 +33,27 @@ struct AppRowView: View {
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.secondary)
 
-            // Close Button (shown on hover)
-            if isHovered {
-                Button(action: onClose) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-                .help("关闭应用前请确认已保存数据")
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+            // Close Button
+            Button(action: onClose) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(isHovered ? .red.opacity(0.8) : .secondary.opacity(0.4))
             }
+            .buttonStyle(.plain)
+            .help("关闭应用")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(isHovered ? Color.gray.opacity(0.1) : Color.clear)
-        .contentShape(Rectangle())
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(isHovered ? 0.8 : 0.4))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.primary.opacity(isHovered ? 0.1 : 0.05), lineWidth: 1)
+        )
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
+            withAnimation(.easeInOut(duration: 0.2)) {
                 isHovered = hovering
             }
         }

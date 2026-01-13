@@ -12,162 +12,160 @@ struct OverviewTabView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Main Rings
-                mainRingsSection
-
-                Divider()
-                    .padding(.horizontal)
-
-                // System Status
-                systemStatusSection
-
-                Divider()
-                    .padding(.horizontal)
-                
-                // Top CPU Processes
-                topProcessesSection
-
-                Divider()
-                    .padding(.horizontal)
-
-                // Core Usage
-                coreUsageSection
-            }
-            .padding(.vertical, 16)
-        }
-    }
-
-    // MARK: - Main Rings Section
-
-    private var mainRingsSection: some View {
-        HStack(spacing: 24) {
-            RingView(
-                value: monitor.cpuUsage,
-                label: "CPU",
-                color: colorForUsage(monitor.cpuUsage)
-            )
-            .help("System: \(String(format: "%.0f%%", monitor.cpuSystemUsage))\nUser: \(String(format: "%.0f%%", monitor.cpuUserUsage))")
-
-            RingView(
-                value: monitor.gpuUsage ?? 0,
-                label: "GPU",
-                color: colorForUsage(monitor.gpuUsage ?? 0),
-                isAvailable: monitor.gpuUsage != nil
-            )
-
-            RingView(
-                value: monitor.memoryUsage,
-                label: "MEM",
-                color: colorForUsage(monitor.memoryUsage)
-            )
-        }
-        .padding(.horizontal)
-    }
-
-    // MARK: - System Status Section
-
-    private var systemStatusSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Load Average (above temperature)
-            StatusRow(
-                icon: "",
-                label: "负载",
-                value: monitor.loadAverage.displayString
-            )
-            
-            // Temperature
-            if let temp = monitor.cpuTemperature {
-                StatusRow(icon: "", label: "温度", value: String(format: "%.0f°C", temp))
-            } else {
-                StatusRow(icon: "", label: "温度", value: "N/A", isAvailable: false)
-            }
-
-            // Fan
-            if let fan = monitor.fanSpeed {
-                StatusRow(icon: "", label: "风扇", value: "\(fan) RPM")
-            } else {
-                StatusRow(icon: "", label: "风扇", value: "N/A", isAvailable: false)
-            }
-
-            // Disk
-            StatusRow(
-                icon: "",
-                label: "磁盘",
-                value: "可用 \(ByteFormatter.format(monitor.diskAvailable)) / 共 \(ByteFormatter.format(monitor.diskTotal))"
-            )
-
-            // Network
-            StatusRow(
-                icon: "",
-                label: "网络",
-                value: "⬆ \(ByteFormatter.formatSpeed(monitor.networkUpload))   ⬇ \(ByteFormatter.formatSpeed(monitor.networkDownload))"
-            )
-        }
-        .padding(.horizontal)
-    }
-    
-    // MARK: - Top Processes Section
-    
-    private var topProcessesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Processes")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal)
-            
-            if monitor.topCPUProcesses.isEmpty {
-                Text("加载中...")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal)
-            } else {
-                VStack(spacing: 6) {
-                    ForEach(monitor.topCPUProcesses) { process in
-                        ProcessRow(process: process)
+            VStack(spacing: 12) {
+                // Main Metrics Grid
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12)
+                ], spacing: 12) {
+                    // CPU Card
+                    BentoCard(title: "CPU", icon: "cpu") {
+                        HStack(alignment: .lastTextBaseline, spacing: 4) {
+                            Text(String(format: "%.0f", monitor.cpuUsage))
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                            Text("%")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                        .foregroundColor(colorForUsage(monitor.cpuUsage))
+                    }
+                    
+                    // GPU Card
+                    BentoCard(title: "GPU", icon: "square.grid.2x2") {
+                        if let gpu = monitor.gpuUsage {
+                            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                                Text(String(format: "%.0f", gpu))
+                                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                                Text("%")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                            .foregroundColor(colorForUsage(gpu))
+                        } else {
+                            Text("N/A")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    // MEM Card
+                    BentoCard(title: "MEM", icon: "memorychip") {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                                Text(String(format: "%.1f", Double(AppMemoryManager.shared.totalMemoryUsed) / 1024 / 1024 / 1024))
+                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                Text("/")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.0fGB", Double(AppMemoryManager.shared.totalMemory) / 1024 / 1024 / 1024))
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .foregroundColor(.purple)
+                    }
+                    
+                    // Load Card
+                    BentoCard(title: "负载", icon: "chart.bar.fill") {
+                        Text(monitor.loadAverage.displayString)
+                            .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                            .lineLimit(1)
                     }
                 }
-                .padding(.horizontal)
-            }
-        }
-    }
-
-    // MARK: - Core Usage Section
-
-    private var coreUsageSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("核心使用率")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
                 
-                // Show P/E core count label
-                if monitor.coreTopology.performanceCores > 0 || monitor.coreTopology.efficiencyCores > 0 {
-                    Text("(\(monitor.coreTopology.displayLabel))")
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundColor(.secondary.opacity(0.8))
+                // Status Strip
+                BentoCard(padding: 10) {
+                    HStack {
+                        // Temp
+                        HStack(spacing: 4) {
+                            Image(systemName: "thermometer.medium")
+                            Text(monitor.cpuTemperature.map { String(format: "%.0f°C", $0) } ?? "N/A")
+                        }
+                        
+                        Spacer()
+                        
+                        // Fan
+                        HStack(spacing: 4) {
+                            Image(systemName: "fanblades.fill")
+                            Text(monitor.fanSpeed.map { "\($0) RPM" } ?? "N/A")
+                        }
+                        
+                        Spacer()
+                        
+                        // Disk
+                        HStack(spacing: 4) {
+                            Image(systemName: "internaldrive.fill")
+                            Text(ByteFormatter.format(monitor.diskAvailable))
+                        }
+                    }
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
                 }
-            }
-            .padding(.horizontal)
+                
+                // Network Card
+                BentoCard(title: "网络", icon: "network") {
+                    HStack {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up")
+                            Text(ByteFormatter.formatSpeed(monitor.networkUpload))
+                        }
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down")
+                            Text(ByteFormatter.formatSpeed(monitor.networkDownload))
+                        }
+                    }
+                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.cyan)
+                }
+                
+                // Top Processes Section
+                BentoCard(title: "Processes", icon: "list.bullet") {
+                    if monitor.topCPUProcesses.isEmpty {
+                        Text("加载中...")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    } else {
+                        VStack(spacing: 8) {
+                            ForEach(Array(monitor.topCPUProcesses.prefix(3))) { process in
+                                ProcessRow(process: process)
+                            }
+                        }
+                    }
+                }
 
-            VStack(spacing: 6) {
-                // Group and sort cores: P-cores first, then E-cores
-                let sortedCores = getSortedCores()
-                ForEach(sortedCores, id: \.index) { core in
-                    CoreUsageRow(
-                        coreIndex: core.displayIndex,
-                        usage: core.usage,
-                        coreType: core.type
-                    )
+                // Core Usage Section
+                BentoCard(title: "核心使用率", icon: "cpu.fill") {
+                    let sortedCores = getSortedCores()
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(sortedCores, id: \.index) { core in
+                                VStack(spacing: 4) {
+                                    Text("\(core.type == .performance ? "P" : "E")\(core.displayIndex)")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundColor(.secondary)
+                                    
+                                    ZStack(alignment: .bottom) {
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(Color.primary.opacity(0.05))
+                                            .frame(width: 12, height: 30)
+                                        
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(colorForUsage(core.usage))
+                                            .frame(width: 12, height: CGFloat(30.0 * (core.usage / 100.0)))
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
                 }
             }
-            .padding(.horizontal)
+            .padding(16)
         }
+        .scrollIndicators(.hidden)
     }
-    
+
     // MARK: - Helper: Sorted Cores
     
     private struct CoreInfo {

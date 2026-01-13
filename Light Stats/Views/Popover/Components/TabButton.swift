@@ -17,22 +17,21 @@ struct TabButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 12, weight: isSelected ? .medium : .regular))
+                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
                 .foregroundColor(isSelected ? .primary : .secondary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 5)
-                .contentShape(Rectangle())
+                .padding(.horizontal, 20)
+                .padding(.vertical, 6)
+                .background(
+                    ZStack {
+                        if isSelected {
+                            Capsule()
+                                .fill(Color(nsColor: .controlBackgroundColor))
+                                .shadow(color: Color.black.opacity(0.08), radius: 2, y: 1)
+                                .matchedGeometryEffect(id: "ACTIVE_TAB", in: namespace)
+                        }
+                    }
+                )
         }
         .buttonStyle(.plain)
-        .background(
-            ZStack {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(nsColor: .selectedControlColor))
-                        .matchedGeometryEffect(id: "ACTIVE_TAB", in: namespace)
-                        .shadow(color: Color.black.opacity(0.1), radius: 1, y: 1)
-                }
-            }
-        )
     }
 }

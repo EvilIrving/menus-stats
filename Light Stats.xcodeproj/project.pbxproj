@@ -21,12 +21,12 @@
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = A4163D482EFBC3DB0013ED8C /* menu-stats */;
+			target = A4163D482EFBC3DB0013ED8C /* Light Stats */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A4163D4B2EFBC3DB0013ED8C /* menu-stats */ = {
+		A4163D4B2EFBC3DB0013ED8C /* Light Stats */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				A4EDBBEC2EFC09FB0081D4E1 /* Exceptions for "Light Stats" folder in "Light Stats" target */,

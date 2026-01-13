@@ -13,27 +13,99 @@ struct CleanupTabView: View {
     @State private var appToTerminate: RunningApp?
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Summary Header
-            memorySummaryHeader
+        VStack(spacing: 12) {
+            // Memory Summary Card
+            BentoCard(title: "内存使用", icon: "memorychip.fill") {
+                VStack(spacing: 12) {
+                    HStack {
+                        Text("\(ByteFormatter.format(appManager.totalMemoryUsed)) / \(ByteFormatter.format(appManager.totalMemory))")
+                            .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        Spacer()
+                        Text(String(format: "%.0f%%", memoryUsagePercent))
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
 
-            Divider()
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Color.primary.opacity(0.05))
 
-            // Detailed Memory Info Section (without cache indicators)
-            if appManager.detailedMemory != nil {
-                detailedMemorySection
-
-                Divider()
+                            Capsule()
+                                .fill(memoryBarColor)
+                                .frame(width: geometry.size.width * CGFloat(min(memoryUsagePercent / 100.0, 1.0)))
+                        }
+                    }
+                    .frame(height: 8)
+                    
+                    // Swap Warning (only show when swap is used)
+                    if swapUsed > 0 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 11))
+                            Text("Swap")
+                                .font(.system(size: 11, weight: .medium))
+                            Text(ByteFormatter.format(swapUsed))
+                                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            Spacer()
+                        }
+                        .foregroundColor(swapUsed < 1024 * 1024 * 1024 ? .orange : .red)
+                    }
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 4)
 
-            // App Count Header (above list)
-            appCountHeader
+            // Simplified Metrics Grid
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12)
+            ], spacing: 12) {
+                // Available
+                BentoCard(title: "可用内存", icon: "checkmark.circle.fill") {
+                    Text(ByteFormatter.format(appManager.totalMemory - appManager.totalMemoryUsed))
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.green)
+                }
+                
+                // App Used
+                BentoCard(title: "App 占用", icon: "app.dashed") {
+                    Text(ByteFormatter.format(appManager.totalMemoryUsed))
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal, 16)
+
+            // App List Header
+            HStack {
+                Text("运行中 App")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("\(appManager.runningApps.count) 个")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary.opacity(0.8))
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
 
             // App List
             if appManager.runningApps.isEmpty {
                 emptyStateView
             } else {
-                appListView
+                ScrollView {
+                    VStack(spacing: 8) {
+                        ForEach(appManager.runningApps) { app in
+                            AppCardView(app: app) {
+                                terminateApp(app)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                }
+                .scrollIndicators(.hidden)
             }
         }
         .onAppear {
@@ -67,138 +139,26 @@ struct CleanupTabView: View {
         }
     }
 
-    // MARK: - Memory Summary Header
-
-    private var memorySummaryHeader: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("内存占用")
-                    .font(.system(size: 13))
-                Spacer()
-                Text("\(ByteFormatter.format(appManager.totalMemoryUsed)) / \(ByteFormatter.format(appManager.totalMemory))")
-                    .font(.system(size: 13, weight: .medium, design: .monospaced))
-                Text(String(format: "(%.0f%%)", memoryUsagePercent))
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-            }
-
-            // Progress bar with pressure-based color
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.gray.opacity(0.2))
-
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(memoryBarColor)
-                        .frame(width: geometry.size.width * min(memoryUsagePercent / 100, 1.0))
-                        .animation(.easeInOut(duration: 0.3), value: memoryUsagePercent)
-                }
-            }
-            .frame(height: 8)
-        }
-        .padding()
-    }
+    // MARK: - Helpers
 
     private var memoryUsagePercent: Double {
         guard appManager.totalMemory > 0 else { return 0 }
         return Double(appManager.totalMemoryUsed) / Double(appManager.totalMemory) * 100
     }
 
-    /// Memory bar color based on memory pressure level
     private var memoryBarColor: Color {
         switch appManager.memoryPressure {
-        case .normal:
-            return .green
-        case .warning:
-            return .yellow
-        case .critical:
-            return .red
+        case .normal: return .green
+        case .warning: return .yellow
+        case .critical: return .red
         }
     }
-
-    // MARK: - Cache Section (Ring + Clear Button)
-
-    private var purgeableMemory: UInt64 {
-        appManager.detailedMemory?.purgeable ?? 0
+    
+    private var swapUsed: UInt64 {
+        appManager.detailedMemory?.swapUsed ?? 0
     }
 
-    private var purgeablePercent: Double {
-        guard appManager.totalMemory > 0 else { return 0 }
-        return Double(purgeableMemory) / Double(appManager.totalMemory) * 100
-    }
-
-    // MARK: - Detailed Memory Section
-
-    /// Get sorted memory stats (by value descending)
-    private func getSortedMemoryStats(from mem: MemoryInfo.DetailedInfo) -> [MemoryStatItem] {
-        let stats: [MemoryStatItem] = [
-            MemoryStatItem(label: "活跃", value: mem.active,
-                          tooltip: "正在被应用程序使用的内存，最近被访问过"),
-            MemoryStatItem(label: "非活跃", value: mem.inactive,
-                          tooltip: "最近未被访问的内存，可能被重新分配"),
-            MemoryStatItem(label: "联动", value: mem.wired,
-                          tooltip: "系统核心使用的内存，不可被换出或释放"),
-            MemoryStatItem(label: "压缩", value: mem.compressed,
-                          tooltip: "被压缩以节省空间的内存数据"),
-            MemoryStatItem(label: "推测", value: mem.speculative,
-                          tooltip: "系统预读的数据，可被快速释放"),
-            MemoryStatItem(label: "文件缓存", value: mem.external,
-                          tooltip: "文件系统缓存，由系统自动管理"),
-            MemoryStatItem(label: "交换区", value: mem.swapUsed,
-                          tooltip: "已使用的磁盘交换空间，内存不足时启用"),
-            MemoryStatItem(label: "可清理", value: mem.purgeable,
-                          tooltip: "应用标记可丢弃的内存，系统可随时释放")
-        ]
-        return stats.sorted { $0.value > $1.value }
-    }
-
-    private var detailedMemorySection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let mem = appManager.detailedMemory {
-                let sortedStats = getSortedMemoryStats(from: mem)
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: 4) {
-                    ForEach(sortedStats) { stat in
-                        MemoryStatRow(label: stat.label, value: stat.value, tooltip: stat.tooltip)
-                    }
-                }
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-    }
-
-    // MARK: - App Count Header
-
-    private var appCountHeader: some View {
-        HStack {
-            Text("运行中 App: \(appManager.runningApps.count) 个")
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
-            Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 6)
-        .background(Color.gray.opacity(0.05))
-    }
-
-    // MARK: - App List
-
-    private var appListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(appManager.runningApps) { app in
-                    AppRowView(app: app) {
-                        terminateApp(app)
-                    }
-                    Divider()
-                        .padding(.leading, 52)
-                }
-            }
-        }
-    }
+    // MARK: - Actions
 
     private var emptyStateView: some View {
         VStack {

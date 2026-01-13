@@ -15,57 +15,54 @@ struct PopoverContentView: View {
         VStack(spacing: 0) {
             // Tab Bar
             HStack(spacing: 0) {
-                HStack(spacing: 0) {
+                HStack(spacing: 2) {
                     TabButton(title: "概览", isSelected: selectedTab == 0, namespace: animation) {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             selectedTab = 0
                         }
                     }
                     
-                    TabButton(title: "清理释放", isSelected: selectedTab == 1, namespace: animation) {
+                    TabButton(title: "清理", isSelected: selectedTab == 1, namespace: animation) {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             selectedTab = 1
                         }
                     }
                 }
-                .padding(2)
+                .padding(3)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+                    Capsule()
+                        .fill(Color.primary.opacity(0.03))
                 )
 
                 Spacer()
 
-                // Settings Button - 打开独立设置窗口
+                // Settings Button
                 SettingsLink {
-                    Image(systemName: "gearshape")
+                    Image(systemName: "gearshape.fill")
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
+                        .padding(8)
+                        .background(Circle().fill(Color.primary.opacity(0.03)))
                 }
                 .buttonStyle(.plain)
                 .help("设置")
             }
             .padding(.horizontal, 16)
-            .padding(.top, 12)
-
-            Divider()
-                .padding(.top, 8)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
 
             // Content Area
-            Group {
-                if selectedTab == 0 {
-                    OverviewTabView()
-                } else {
-                    CleanupTabView()
-                }
+            ZStack {
+                OverviewTabView()
+                    .opacity(selectedTab == 0 ? 1 : 0)
+                
+                CleanupTabView()
+                    .opacity(selectedTab == 1 ? 1 : 0)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(width: 360, height: 480)
+        .background(VisualEffectView(material: .sidebar, blendingMode: .behindWindow).ignoresSafeArea())
+        .frame(width: 360, height: 520)
     }
 }
 
