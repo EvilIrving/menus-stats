@@ -19,11 +19,6 @@ struct CleanupTabView: View {
 
             Divider()
 
-            // Cache Section with Ring and Clear Button
-            // cacheSectionView
-
-            Divider()
-
             // Detailed Memory Info Section (without cache indicators)
             if appManager.detailedMemory != nil {
                 detailedMemorySection
@@ -130,62 +125,6 @@ struct CleanupTabView: View {
     private var purgeablePercent: Double {
         guard appManager.totalMemory > 0 else { return 0 }
         return Double(purgeableMemory) / Double(appManager.totalMemory) * 100
-    }
-
-    private var cacheSectionView: some View {
-        HStack(spacing: 16) {
-            // Purgeable Ring
-            ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 6)
-
-                Circle()
-                    .trim(from: 0, to: min(purgeablePercent / 100, 1.0))
-                    .stroke(Color.orange, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 0.5), value: purgeablePercent)
-
-                VStack(spacing: 2) {
-                    Text(ByteFormatter.format(purgeableMemory))
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                }
-            }
-            .frame(width: 60, height: 60)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("可清理内存")
-                    .font(.system(size: 12, weight: .medium))
-                Text("系统可释放的缓存数据")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            // Clear Cache Button
-            Button(action: clearCache) {
-                VStack(spacing: 4) {
-                    Image(systemName: "trash.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.orange)
-                    Text("清理")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                }
-            }
-            .buttonStyle(.plain)
-            .help("清除可释放的系统缓存")
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
-    }
-
-    private func clearCache() {
-        // Trigger system memory cleanup by running purge command
-        // Note: This requires admin privileges, so we'll use a safer approach
-        Task {
-            await appManager.triggerMemoryCleanup()
-        }
     }
 
     // MARK: - Detailed Memory Section
