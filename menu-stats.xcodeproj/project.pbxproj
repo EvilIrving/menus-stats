@@ -9,6 +9,8 @@
 /* Begin PBXFileReference section */
 		A4163D492EFBC3DB0013ED8C /* menu-stats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "menu-stats.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4C320BF2F1615F600BA764B /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
+		A4C321922F16296600BA764B /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
+		A4C321D92F16306D00BA764B /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -60,6 +62,16 @@
 			sourceTree = "<group>";
 		};
 		A4C320C12F1615F600BA764B /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A4C321942F16296600BA764B /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A4C321DB2F16306D00BA764B /* Products */ = {
 			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
@@ -120,6 +132,14 @@
 				{
 					ProductGroup = A4C320C12F1615F600BA764B /* Products */;
 					ProjectRef = A4C320BF2F1615F600BA764B /* menu-stats.xcodeproj */;
+				},
+				{
+					ProductGroup = A4C321942F16296600BA764B /* Products */;
+					ProjectRef = A4C321922F16296600BA764B /* menu-stats.xcodeproj */;
+				},
+				{
+					ProductGroup = A4C321DB2F16306D00BA764B /* Products */;
+					ProjectRef = A4C321D92F16306D00BA764B /* menu-stats.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -273,6 +293,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "menu-stats/menu_stats.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = QZZ878S3NS;
@@ -333,6 +354,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "menu-stats/menu_stats.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = QZZ878S3NS;
