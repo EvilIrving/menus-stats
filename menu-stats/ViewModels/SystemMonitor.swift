@@ -18,6 +18,15 @@ final class SystemMonitor: ObservableObject {
     @Published var cpuUserUsage: Double = 0
     @Published var cpuSystemUsage: Double = 0
     @Published var coreUsages: [Double] = []
+    
+    // Core topology (Apple Silicon P/E cores)
+    @Published var coreTopology: CoreTopology = .unknown
+    
+    // Load average (1, 5, 15 minutes)
+    @Published var loadAverage: LoadAverage = .zero
+    
+    // Top CPU processes
+    @Published var topCPUProcesses: [TopProcess] = []
 
     @Published var gpuUsage: Double? = nil
 
@@ -45,7 +54,12 @@ final class SystemMonitor: ObservableObject {
 
     static let shared = SystemMonitor()
 
-    private init() {}
+    private init() {
+        // Perform warmup to avoid initial data distortion
+        cpuInfo.warmup()
+        // Get initial core topology (cached)
+        coreTopology = cpuInfo.getCoreTopology()
+    }
 
     // MARK: - Public Methods
 
@@ -79,6 +93,7 @@ final class SystemMonitor: ObservableObject {
         updateNetwork()
         updateGPU()
         updateTemperatureAndFan()
+        await updateTopProcesses()
     }
 
     private func updateCPU() {
@@ -87,6 +102,12 @@ final class SystemMonitor: ObservableObject {
         cpuUserUsage = usage.user
         cpuSystemUsage = usage.system
         coreUsages = cpuInfo.getPerCoreUsage()
+        
+        // Update load average
+        loadAverage = CPUInfo.getLoadAverage()
+        
+        // Update core topology (cached, only refreshes after TTL)
+        coreTopology = cpuInfo.getCoreTopology()
     }
 
     private func updateMemory() {
@@ -116,5 +137,9 @@ final class SystemMonitor: ObservableObject {
     private func updateTemperatureAndFan() {
         cpuTemperature = SMCInfo.getCPUTemperature()
         fanSpeed = SMCInfo.getFanSpeed()
+    }
+    
+    private func updateTopProcesses() async {
+        topCPUProcesses = await ProcessStats.getTopCPUProcesses(count: 5)
     }
 }

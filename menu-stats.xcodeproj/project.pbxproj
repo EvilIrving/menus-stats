@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		A4163D492EFBC3DB0013ED8C /* menu-stats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "menu-stats.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4C320BF2F1615F600BA764B /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -55,6 +56,11 @@
 			children = (
 				A4163D492EFBC3DB0013ED8C /* menu-stats.app */,
 			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A4C320C12F1615F600BA764B /* Products */ = {
+			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -110,6 +116,12 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A4163D4A2EFBC3DB0013ED8C /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = A4C320C12F1615F600BA764B /* Products */;
+					ProjectRef = A4C320BF2F1615F600BA764B /* menu-stats.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				A4163D482EFBC3DB0013ED8C /* menu-stats */,

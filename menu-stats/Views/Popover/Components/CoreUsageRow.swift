@@ -7,9 +7,33 @@
 
 import SwiftUI
 
+/// Core type for Apple Silicon
+enum CoreType {
+    case performance  // P-core
+    case efficiency   // E-core
+    case unknown
+    
+    var label: String {
+        switch self {
+        case .performance: return "P"
+        case .efficiency: return "E"
+        case .unknown: return ""
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .performance: return .orange
+        case .efficiency: return .blue
+        case .unknown: return .gray
+        }
+    }
+}
+
 struct CoreUsageRow: View {
     let coreIndex: Int
     let usage: Double
+    var coreType: CoreType = .unknown
 
     var color: Color {
         if usage < 50 {
@@ -23,10 +47,18 @@ struct CoreUsageRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text("Core \(coreIndex)")
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(.secondary)
-                .frame(width: 50, alignment: .leading)
+            // Core label with type badge
+            HStack(spacing: 2) {
+                if coreType != .unknown {
+                    Text(coreType.label)
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(coreType.color)
+                }
+                Text("\(coreIndex)")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(.secondary)
+            }
+            .frame(width: 28, alignment: .leading)
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
