@@ -181,6 +181,9 @@ final class SettingsManager: ObservableObject {
     
     private func save<T>(_ value: T, for key: Key) {
         UserDefaults.standard.set(value, forKey: key.rawValue)
-        ensureAtLeastOneItem()
+        // 延迟执行以避免在视图更新过程中修改状态
+        Task { @MainActor in
+            ensureAtLeastOneItem()
+        }
     }
 }

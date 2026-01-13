@@ -12,9 +12,8 @@ struct MenuStatsApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        // Empty Settings scene - required for menu bar only apps
         Settings {
-            EmptyView()
+            SettingsView()  // macOS 自动处理窗口生命周期
         }
     }
 }

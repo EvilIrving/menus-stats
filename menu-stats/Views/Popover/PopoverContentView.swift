@@ -9,7 +9,6 @@ import SwiftUI
 
 struct PopoverContentView: View {
     @State private var selectedTab: Int = 0
-    @State private var showSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,8 +23,8 @@ struct PopoverContentView: View {
 
                 Spacer()
 
-                // Settings Button
-                Button(action: { showSettings = true }) {
+                // Settings Button - 打开独立设置窗口
+                SettingsLink {
                     Image(systemName: "gearshape")
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
@@ -50,9 +49,6 @@ struct PopoverContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: 360, height: 480)
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-        }
     }
 }
 

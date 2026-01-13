@@ -66,6 +66,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let settings = SettingsManager.shared
         monitor.startMonitoring(interval: settings.refreshRate.interval)
 
+        // 监听刷新频率变化，重新启动监控
+        settings.$refreshRate
+            .dropFirst()  // 跳过初始值
+            .receive(on: DispatchQueue.main)
+            .sink { [weak monitor] newRate in
+                monitor?.startMonitoring(interval: newRate.interval)
+            }
+            .store(in: &cancellables)
+
         // Update status bar text when values change
         Publishers.CombineLatest4(
             monitor.$cpuUsage,

@@ -44,6 +44,7 @@ final class NetworkInfo: @unchecked Sendable {
                 }
             }
 
+            
             guard let next = ptr.pointee.ifa_next else { break }
             ptr = next
         }

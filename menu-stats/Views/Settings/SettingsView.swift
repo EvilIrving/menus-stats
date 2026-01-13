@@ -8,40 +8,21 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var settings = SettingsManager.shared
-    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var settings = SettingsManager.shared
     @State private var showMinimumItemAlert = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text("设置")
-                    .font(.system(size: 16, weight: .semibold))
-                Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // Status Bar Items
+                statusBarSection
+                
+                Divider()
+                
+                // Other Settings
+                otherSettingsSection
             }
             .padding()
-            
-            Divider()
-            
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Status Bar Items
-                    statusBarSection
-                    
-                    Divider()
-                    
-                    // Other Settings
-                    otherSettingsSection
-                }
-                .padding()
-            }
         }
         .frame(width: 360, height: 480)
         .alert("状态栏至少需要显示一个系统状态", isPresented: $showMinimumItemAlert) {
