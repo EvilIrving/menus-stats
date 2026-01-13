@@ -15,23 +15,25 @@ struct TabButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
-                .foregroundColor(isSelected ? .primary : .secondary)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 6)
-                .background(
-                    ZStack {
-                        if isSelected {
-                            Capsule()
-                                .fill(Color(nsColor: .controlBackgroundColor))
-                                .shadow(color: Color.black.opacity(0.08), radius: 2, y: 1)
-                                .matchedGeometryEffect(id: "ACTIVE_TAB", in: namespace)
-                        }
+        Text(title)
+            .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+            .foregroundColor(isSelected ? .primary : .secondary)
+            .animation(nil, value: isSelected)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 6)
+            .background(
+                ZStack {
+                    if isSelected {
+                        Capsule()
+                            .fill(Color(nsColor: .controlBackgroundColor))
+                            .shadow(color: Color.black.opacity(0.08), radius: 2, y: 1)
+                            .matchedGeometryEffect(id: "ACTIVE_TAB", in: namespace)
                     }
-                )
-        }
-        .buttonStyle(.plain)
+                }
+            )
+            .contentShape(Capsule())
+            .onTapGesture {
+                action()
+            }
     }
 }
