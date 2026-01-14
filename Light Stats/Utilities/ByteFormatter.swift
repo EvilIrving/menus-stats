@@ -29,7 +29,7 @@ enum ByteFormatter {
 
     static func formatSpeed(_ bytesPerSecond: Double) -> String {
         if bytesPerSecond >= 1_000_000 {
-            return String(format: "%.0f MB/s", bytesPerSecond / 1_000_000)
+            return String(format: "%.1f MB/s", bytesPerSecond / 1_000_000)
         } else if bytesPerSecond >= 1_000 {
             return String(format: "%.0f KB/s", bytesPerSecond / 1_000)
         } else {

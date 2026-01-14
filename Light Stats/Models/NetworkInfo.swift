@@ -56,8 +56,10 @@ final class NetworkInfo: @unchecked Sendable {
         var downloadSpeed: Double = 0
 
         if elapsed > 0 && previousBytes.sent > 0 {
-            uploadSpeed = Double(totalSent - previousBytes.sent) / elapsed
-            downloadSpeed = Double(totalReceived - previousBytes.received) / elapsed
+            if totalSent >= previousBytes.sent && totalReceived >= previousBytes.received {
+                uploadSpeed = Double(totalSent - previousBytes.sent) / elapsed
+                downloadSpeed = Double(totalReceived - previousBytes.received) / elapsed
+            }
         }
 
         previousBytes = (totalSent, totalReceived)
