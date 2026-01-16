@@ -1,0 +1,62 @@
+/* 
+  Localizable.strings (Japanese)
+  Light Stats
+*/
+
+// MARK: - Tabs
+"tab.overview" = "概要";
+"tab.cleanup" = "クリーンアップ";
+"tab.settings" = "設定";
+
+// MARK: - Settings View
+"settings.statusBar" = "ステータスバー表示";
+"settings.logo" = "ロゴ";
+"settings.cpu" = "CPU";
+"settings.gpu" = "GPU";
+"settings.memory" = "メモリ";
+"settings.disk" = "ディスク";
+"settings.network" = "ネットワーク";
+"settings.fan" = "ファン";
+"settings.refreshRate" = "更新頻度";
+"settings.units" = "単位設定";
+"settings.temperatureUnit" = "温度単位";
+"settings.networkSpeedUnit" = "ネット速度単位";
+"settings.language" = "言語";
+"settings.minimumItemAlert" = "少なくとも1つのステータスバー項目を表示する必要があります";
+"settings.ok" = "OK";
+
+// MARK: - Refresh Rate
+"refreshRate.low" = "低 (5秒)";
+"refreshRate.medium" = "中 (2秒)";
+"refreshRate.high" = "高 (1秒)";
+
+// MARK: - Network Speed Unit
+"networkSpeed.auto" = "自動";
+
+// MARK: - Language
+"language.system" = "システム言語";
+"language.zh-Hans" = "简体中文";
+"language.en" = "English";
+"language.ja" = "日本語";
+
+// MARK: - Overview Tab
+"overview.load" = "負荷";
+"overview.network" = "ネットワーク";
+"overview.loading" = "読み込み中...";
+"overview.coreUsage" = "コア使用率";
+"overview.processes" = "プロセス";
+
+// MARK: - Cleanup Tab
+"cleanup.memoryUsage" = "メモリ使用量";
+"cleanup.availableMemory" = "空きメモリ";
+"cleanup.appUsed" = "App使用中";
+"cleanup.runningApps" = "実行中のApp";
+"cleanup.appCount" = "%d 個";
+"cleanup.noApps" = "実行中のアプリはありません";
+"cleanup.appNotResponding" = "アプリが応答しません";
+"cleanup.forceQuit" = "強制終了";
+"cleanup.cancel" = "キャンセル";
+"cleanup.forceQuitMessage" = "アプリが応答しません。強制終了しますか？\n保存されていないデータが失われる可能性があります。";
+
+// MARK: - Core Topology
+"core.suffix" = "コア";

@@ -1,0 +1,62 @@
+/* 
+  Localizable.strings (English)
+  Light Stats
+*/
+
+// MARK: - Tabs
+"tab.overview" = "Overview";
+"tab.cleanup" = "Cleanup";
+"tab.settings" = "Settings";
+
+// MARK: - Settings View
+"settings.statusBar" = "Status Bar Display";
+"settings.logo" = "Logo";
+"settings.cpu" = "CPU";
+"settings.gpu" = "GPU";
+"settings.memory" = "Memory";
+"settings.disk" = "Disk";
+"settings.network" = "Network";
+"settings.fan" = "Fan";
+"settings.refreshRate" = "Refresh Rate";
+"settings.units" = "Unit Settings";
+"settings.temperatureUnit" = "Temperature";
+"settings.networkSpeedUnit" = "Network Speed";
+"settings.language" = "Language";
+"settings.minimumItemAlert" = "At least one status bar item must be displayed";
+"settings.ok" = "OK";
+
+// MARK: - Refresh Rate
+"refreshRate.low" = "Low (5s)";
+"refreshRate.medium" = "Medium (2s)";
+"refreshRate.high" = "High (1s)";
+
+// MARK: - Network Speed Unit
+"networkSpeed.auto" = "Auto";
+
+// MARK: - Language
+"language.system" = "System";
+"language.zh-Hans" = "简体中文";
+"language.en" = "English";
+"language.ja" = "日本語";
+
+// MARK: - Overview Tab
+"overview.load" = "Load";
+"overview.network" = "Network";
+"overview.loading" = "Loading...";
+"overview.coreUsage" = "Core Usage";
+"overview.processes" = "Processes";
+
+// MARK: - Cleanup Tab
+"cleanup.memoryUsage" = "Memory Usage";
+"cleanup.availableMemory" = "Available";
+"cleanup.appUsed" = "App Used";
+"cleanup.runningApps" = "Running Apps";
+"cleanup.appCount" = "%d apps";
+"cleanup.noApps" = "No running apps";
+"cleanup.appNotResponding" = "App Not Responding";
+"cleanup.forceQuit" = "Force Quit";
+"cleanup.cancel" = "Cancel";
+"cleanup.forceQuitMessage" = "The app is not responding. Force quit?\nUnsaved data may be lost.";
+
+// MARK: - Core Topology
+"core.suffix" = " cores";

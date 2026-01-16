@@ -9,31 +9,43 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject private var settings = SettingsManager.shared
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var showMinimumItemAlert = false
     
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 // Status Bar Items Card
-                BentoCard(title: "状态栏显示", icon: "menubar.rectangle") {
+                BentoCard(title: "settings.statusBar".localized, icon: "menubar.rectangle") {
                     LazyVGrid(columns: [
                         GridItem(.flexible()),
                         GridItem(.flexible()),
                         GridItem(.flexible())
                     ], spacing: 12) {
-                        SettingsGridItem(title: "Logo", isOn: $settings.showLogo, icon: "applelogo") { validateMinimumItems() }
-                        SettingsGridItem(title: "CPU", isOn: $settings.showCPU, icon: "cpu") { validateMinimumItems() }
-                        SettingsGridItem(title: "GPU", isOn: $settings.showGPU, icon: "square.grid.2x2") { validateMinimumItems() }
-                        SettingsGridItem(title: "内存", isOn: $settings.showMemory, icon: "memorychip") { validateMinimumItems() }
-                        SettingsGridItem(title: "磁盘", isOn: $settings.showDisk, icon: "internaldrive") { validateMinimumItems() }
-                        SettingsGridItem(title: "网络", isOn: $settings.showNetwork, icon: "network") { validateMinimumItems() }
-                        SettingsGridItem(title: "风扇", isOn: $settings.showFan, icon: "fanblades") { validateMinimumItems() }
+                        SettingsGridItem(title: "settings.logo".localized, isOn: $settings.showLogo, icon: "applelogo") { validateMinimumItems() }
+                        SettingsGridItem(title: "settings.cpu".localized, isOn: $settings.showCPU, icon: "cpu") { validateMinimumItems() }
+                        SettingsGridItem(title: "settings.gpu".localized, isOn: $settings.showGPU, icon: "square.grid.2x2") { validateMinimumItems() }
+                        SettingsGridItem(title: "settings.memory".localized, isOn: $settings.showMemory, icon: "memorychip") { validateMinimumItems() }
+                        SettingsGridItem(title: "settings.disk".localized, isOn: $settings.showDisk, icon: "internaldrive") { validateMinimumItems() }
+                        SettingsGridItem(title: "settings.network".localized, isOn: $settings.showNetwork, icon: "network") { validateMinimumItems() }
+                        SettingsGridItem(title: "settings.fan".localized, isOn: $settings.showFan, icon: "fanblades") { validateMinimumItems() }
                     }
                     .padding(.vertical, 4)
                 }
                 
+                // Language Card
+                BentoCard(title: "settings.language".localized, icon: "globe") {
+                    Picker("", selection: $settings.appLanguage) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.displayName).tag(lang)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+                
                 // Refresh Rate Card
-                BentoCard(title: "刷新频率", icon: "timer") {
+                BentoCard(title: "settings.refreshRate".localized, icon: "timer") {
                     Picker("", selection: $settings.refreshRate) {
                         ForEach(SettingsManager.RefreshRate.allCases, id: \.self) { rate in
                             Text(rate.displayName).tag(rate)
@@ -44,10 +56,10 @@ struct SettingsView: View {
                 }
                 
                 // Units Card
-                BentoCard(title: "单位设置", icon: "ruler") {
+                BentoCard(title: "settings.units".localized, icon: "ruler") {
                     VStack(spacing: 16) {
                         HStack {
-                            Text("温度单位")
+                            Text("settings.temperatureUnit".localized)
                                 .font(.system(size: 12))
                                 .foregroundColor(.secondary)
                             Spacer()
@@ -62,7 +74,7 @@ struct SettingsView: View {
                         }
                         
                         HStack {
-                            Text("网速单位")
+                            Text("settings.networkSpeedUnit".localized)
                                 .font(.system(size: 12))
                                 .foregroundColor(.secondary)
                             Spacer()
@@ -83,9 +95,10 @@ struct SettingsView: View {
         .scrollIndicators(.hidden)
         .frame(width: 380, height: 520)
         .background(VisualEffectView(material: .sidebar, blendingMode: .behindWindow).ignoresSafeArea())
-        .alert("状态栏至少需要显示一个系统状态", isPresented: $showMinimumItemAlert) {
-            Button("确定", role: .cancel) {}
+        .alert("settings.minimumItemAlert".localized, isPresented: $showMinimumItemAlert) {
+            Button("settings.ok".localized, role: .cancel) {}
         }
+        .id(localization.currentLanguage) // Force refresh when language changes
     }
     
     private func validateMinimumItems() {

@@ -10,19 +10,20 @@ import SwiftUI
 struct PopoverContentView: View {
     @State private var selectedTab: Int = 0
     @Namespace private var animation
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         VStack(spacing: 0) {
             // Tab Bar
             HStack(spacing: 0) {
                 HStack(spacing: 2) {
-                    TabButton(title: "概览", isSelected: selectedTab == 0, namespace: animation) {
+                    TabButton(title: "tab.overview".localized, isSelected: selectedTab == 0, namespace: animation) {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             selectedTab = 0
                         }
                     }
                     
-                    TabButton(title: "清理", isSelected: selectedTab == 1, namespace: animation) {
+                    TabButton(title: "tab.cleanup".localized, isSelected: selectedTab == 1, namespace: animation) {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             selectedTab = 1
                         }
@@ -45,7 +46,7 @@ struct PopoverContentView: View {
                         .background(Circle().fill(Color.primary.opacity(0.03)))
                 }
                 .buttonStyle(.plain)
-                .help("设置")
+                .help("tab.settings".localized)
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -63,6 +64,7 @@ struct PopoverContentView: View {
         }
         .background(VisualEffectView(material: .sidebar, blendingMode: .behindWindow).ignoresSafeArea())
         .frame(width: 360, height: 520)
+        .id(localization.currentLanguage) // Force refresh when language changes
     }
 }
 

@@ -22,7 +22,7 @@ struct CoreTopology {
         } else if performanceCores > 0 {
             return "\(performanceCores)P"
         } else {
-            return "\(totalCores)核"
+            return "\(totalCores)\("core.suffix".localized)"
         }
     }
     

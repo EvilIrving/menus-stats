@@ -66,10 +66,11 @@ struct OverviewTabView: View {
                     }
                     
                     // Load Card
-                    BentoCard(title: "负载", icon: "chart.bar.fill") {
+                    BentoCard(title: "overview.load".localized, icon: "chart.bar.fill") {
                         Text(monitor.loadAverage.displayString)
                             .font(.system(size: 14, weight: .semibold, design: .monospaced))
                             .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                     }
                 }
                 
@@ -103,7 +104,7 @@ struct OverviewTabView: View {
                 }
                 
                 // Network Card
-                BentoCard(title: "网络", icon: "network") {
+                BentoCard(title: "overview.network".localized, icon: "network") {
                     HStack {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.up")
@@ -120,9 +121,9 @@ struct OverviewTabView: View {
                 }
                 
                 // Top Processes Section
-                BentoCard(title: "Processes", icon: "list.bullet") {
+                BentoCard(title: "overview.processes".localized, icon: "list.bullet") {
                     if monitor.topCPUProcesses.isEmpty {
-                        Text("加载中...")
+                        Text("overview.loading".localized)
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     } else {
@@ -135,7 +136,7 @@ struct OverviewTabView: View {
                 }
 
                 // Core Usage Section
-                BentoCard(title: "核心使用率", icon: "cpu.fill") {
+                BentoCard(title: "overview.coreUsage".localized, icon: "cpu.fill") {
                     let sortedCores = getSortedCores()
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {

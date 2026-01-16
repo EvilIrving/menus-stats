@@ -48,6 +48,13 @@ final class SettingsManager: ObservableObject {
         didSet { save(networkSpeedUnit.rawValue, for: .networkSpeedUnit) }
     }
     
+    @Published var appLanguage: AppLanguage {
+        didSet {
+            save(appLanguage.rawValue, for: .appLanguage)
+            LocalizationManager.shared.setLanguage(appLanguage)
+        }
+    }
+    
     // MARK: - Singleton
     
     static let shared = SettingsManager()
@@ -69,9 +76,9 @@ final class SettingsManager: ObservableObject {
         
         var displayName: String {
             switch self {
-            case .low: return "低 (5秒)"
-            case .medium: return "中 (2秒)"
-            case .high: return "高 (1秒)"
+            case .low: return "refreshRate.low".localized
+            case .medium: return "refreshRate.medium".localized
+            case .high: return "refreshRate.high".localized
             }
         }
     }
@@ -105,7 +112,7 @@ final class SettingsManager: ObservableObject {
         
         var displayName: String {
             switch self {
-            case .auto: return "自动"
+            case .auto: return "networkSpeed.auto".localized
             case .kbps: return "KB/s"
             case .mbps: return "MB/s"
             }
@@ -136,6 +143,7 @@ final class SettingsManager: ObservableObject {
         case refreshRate = "settings.refreshRate"
         case temperatureUnit = "settings.temperatureUnit"
         case networkSpeedUnit = "settings.networkSpeedUnit"
+        case appLanguage = "settings.appLanguage"
     }
     
     // MARK: - Init
@@ -161,6 +169,9 @@ final class SettingsManager: ObservableObject {
         
         let netUnitStr = defaults.string(forKey: Key.networkSpeedUnit.rawValue) ?? NetworkSpeedUnit.auto.rawValue
         networkSpeedUnit = NetworkSpeedUnit(rawValue: netUnitStr) ?? .auto
+        
+        let langStr = defaults.string(forKey: Key.appLanguage.rawValue) ?? AppLanguage.system.rawValue
+        appLanguage = AppLanguage(rawValue: langStr) ?? .system
     }
     
     // MARK: - Validation

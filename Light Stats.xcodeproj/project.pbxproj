@@ -10,6 +10,7 @@
 		A4163D492EFBC3DB0013ED8C /* Light Stats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Light Stats.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A475FD742F164E9000806CD9 /* Light Stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Light Stats.xcodeproj"; sourceTree = "<group>"; };
 		A475FDC32F165B3900806CD9 /* Light Stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Light Stats.xcodeproj"; sourceTree = "<group>"; };
+		A475FF0E2F175DC600806CD9 /* menu-stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "menu-stats.xcodeproj"; sourceTree = "<group>"; };
 		A4C320BF2F1615F600BA764B /* Light Stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Light Stats.xcodeproj"; sourceTree = "<group>"; };
 		A4C321922F16296600BA764B /* Light Stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Light Stats.xcodeproj"; sourceTree = "<group>"; };
 		A4C321D92F16306D00BA764B /* Light Stats.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Light Stats.xcodeproj"; sourceTree = "<group>"; };
@@ -69,6 +70,11 @@
 			sourceTree = "<group>";
 		};
 		A475FDC52F165B3900806CD9 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A475FF102F175DC600806CD9 /* Products */ = {
 			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
@@ -134,6 +140,8 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
+				ja,
 			);
 			mainGroup = A4163D402EFBC3DB0013ED8C;
 			minimizedProjectReferenceProxies = 1;
@@ -160,6 +168,10 @@
 				{
 					ProductGroup = A4C321DB2F16306D00BA764B /* Products */;
 					ProjectRef = A4C321D92F16306D00BA764B /* Light Stats.xcodeproj */;
+				},
+				{
+					ProductGroup = A475FF102F175DC600806CD9 /* Products */;
+					ProjectRef = A475FF0E2F175DC600806CD9 /* menu-stats.xcodeproj */;
 				},
 			);
 			projectRoot = "";

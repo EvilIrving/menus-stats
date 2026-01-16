@@ -1,0 +1,62 @@
+/* 
+  Localizable.strings (Simplified Chinese)
+  Light Stats
+*/
+
+// MARK: - Tabs
+"tab.overview" = "概览";
+"tab.cleanup" = "清理";
+"tab.settings" = "设置";
+
+// MARK: - Settings View
+"settings.statusBar" = "状态栏显示";
+"settings.logo" = "Logo";
+"settings.cpu" = "CPU";
+"settings.gpu" = "GPU";
+"settings.memory" = "内存";
+"settings.disk" = "磁盘";
+"settings.network" = "网络";
+"settings.fan" = "风扇";
+"settings.refreshRate" = "刷新频率";
+"settings.units" = "单位设置";
+"settings.temperatureUnit" = "温度单位";
+"settings.networkSpeedUnit" = "网速单位";
+"settings.language" = "语言";
+"settings.minimumItemAlert" = "状态栏至少需要显示一个系统状态";
+"settings.ok" = "确定";
+
+// MARK: - Refresh Rate
+"refreshRate.low" = "低 (5秒)";
+"refreshRate.medium" = "中 (2秒)";
+"refreshRate.high" = "高 (1秒)";
+
+// MARK: - Network Speed Unit
+"networkSpeed.auto" = "自动";
+
+// MARK: - Language
+"language.system" = "跟随系统";
+"language.zh-Hans" = "简体中文";
+"language.en" = "English";
+"language.ja" = "日本語";
+
+// MARK: - Overview Tab
+"overview.load" = "负载";
+"overview.network" = "网络";
+"overview.loading" = "加载中...";
+"overview.coreUsage" = "核心使用率";
+"overview.processes" = "进程";
+
+// MARK: - Cleanup Tab
+"cleanup.memoryUsage" = "内存使用";
+"cleanup.availableMemory" = "可用内存";
+"cleanup.appUsed" = "App 占用";
+"cleanup.runningApps" = "运行中 App";
+"cleanup.appCount" = "%d 个";
+"cleanup.noApps" = "没有运行中的应用";
+"cleanup.appNotResponding" = "应用未响应";
+"cleanup.forceQuit" = "强制关闭";
+"cleanup.cancel" = "取消";
+"cleanup.forceQuitMessage" = "应用未响应，是否强制关闭？\n可能导致未保存的数据丢失。";
+
+// MARK: - Core Topology
+"core.suffix" = "核";

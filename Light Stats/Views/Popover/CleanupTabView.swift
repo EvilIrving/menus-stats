@@ -15,7 +15,7 @@ struct CleanupTabView: View {
     var body: some View {
         VStack(spacing: 12) {
             // Memory Summary Card
-            BentoCard(title: "内存使用", icon: "memorychip.fill") {
+            BentoCard(title: "cleanup.memoryUsage".localized, icon: "memorychip.fill") {
                 VStack(spacing: 12) {
                     HStack {
                         Text("\(ByteFormatter.format(appManager.totalMemoryUsed)) / \(ByteFormatter.format(appManager.totalMemory))")
@@ -62,14 +62,14 @@ struct CleanupTabView: View {
                 GridItem(.flexible(), spacing: 12)
             ], spacing: 12) {
                 // Available
-                BentoCard(title: "可用内存", icon: "checkmark.circle.fill") {
+                BentoCard(title: "cleanup.availableMemory".localized, icon: "checkmark.circle.fill") {
                     Text(ByteFormatter.format(appManager.totalMemory - appManager.totalMemoryUsed))
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(.green)
                 }
                 
                 // App Used
-                BentoCard(title: "App 占用", icon: "app.dashed") {
+                BentoCard(title: "cleanup.appUsed".localized, icon: "app.dashed") {
                     Text(ByteFormatter.format(appManager.totalMemoryUsed))
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(.blue)
@@ -79,11 +79,11 @@ struct CleanupTabView: View {
 
             // App List Header
             HStack {
-                Text("运行中 App")
+                Text("cleanup.runningApps".localized)
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("\(appManager.runningApps.count) 个")
+                Text(String(format: "cleanup.appCount".localized, appManager.runningApps.count))
                     .font(.system(size: 11))
                     .foregroundColor(.secondary.opacity(0.8))
             }
@@ -127,15 +127,15 @@ struct CleanupTabView: View {
                 print("========== END DEBUG ==========")
             }
         }
-        .alert("应用未响应", isPresented: $showForceTerminateAlert) {
-            Button("强制关闭", role: .destructive) {
+        .alert("cleanup.appNotResponding".localized, isPresented: $showForceTerminateAlert) {
+            Button("cleanup.forceQuit".localized, role: .destructive) {
                 if let app = appToTerminate {
                     _ = appManager.forceTerminateApp(app)
                 }
             }
-            Button("取消", role: .cancel) {}
+            Button("cleanup.cancel".localized, role: .cancel) {}
         } message: {
-            Text("应用未响应，是否强制关闭？\n可能导致未保存的数据丢失。")
+            Text("cleanup.forceQuitMessage".localized)
         }
     }
 
@@ -163,7 +163,7 @@ struct CleanupTabView: View {
     private var emptyStateView: some View {
         VStack {
             Spacer()
-            Text("没有运行中的应用")
+            Text("cleanup.noApps".localized)
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
             Spacer()
