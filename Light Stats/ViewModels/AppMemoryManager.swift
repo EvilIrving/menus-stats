@@ -32,7 +32,7 @@ final class AppMemoryManager: ObservableObject {
     private var knownAppBundleIds: Set<String> = []
     
     /// ProcessService 实例
-    private let processService = ProcessService.shared
+    private let processService: ProcessServiceProtocol
     
     /// 默认图标（缓存）
     private lazy var defaultAppIcon: NSImage = {
@@ -43,11 +43,12 @@ final class AppMemoryManager: ObservableObject {
         NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil) ?? NSImage()
     }()
     
-    private init() {
+    private init(processService: ProcessServiceProtocol = ProcessService.shared) {
+        self.processService = processService
         totalMemory = ProcessInfo.processInfo.physicalMemory
     }
     
-    func startMonitoring(interval: TimeInterval = 5.0) {
+    func startMonitoring(interval: TimeInterval = AppConfig.appMemoryRefreshInterval) {
         stopMonitoring()
         
         // Initial update
@@ -70,7 +71,7 @@ final class AppMemoryManager: ObservableObject {
     
     func updateRunningApps() async {
         // Step 1: Get top N memory-consuming processes using top command
-        let topProcesses = await processService.getTopMemoryProcesses(count: 150)
+        let topProcesses = await processService.getTopMemoryProcesses(count: AppConfig.topMemoryProcessCount)
         
         // Step 2: Get running GUI apps for icons and bundle identifiers
         let workspace = NSWorkspace.shared

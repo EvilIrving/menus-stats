@@ -18,7 +18,16 @@ func responsibility_get_pid_responsible_for_pid(_ pid: pid_t) -> pid_t
 // MARK: - Process Service
 
 /// 进程服务：提供进程信息查询、top 命令解析、进程控制功能
-final class ProcessService {
+protocol ProcessServiceProtocol {
+    func getBundleInfo(for pid: pid_t) -> ProcessBundleInfo
+    func getProcessName(for pid: pid_t) -> String?
+    func getTopMemoryProcesses(count: Int) async -> [TopProcessInfo]
+    func triggerMemoryCleanup() async
+    func terminateApp(_ app: AppGroup) -> Bool
+    func forceTerminateApp(_ app: AppGroup) -> Bool
+}
+
+final class ProcessService: ProcessServiceProtocol {
     
     static let shared = ProcessService()
     

@@ -140,6 +140,6 @@ final class SystemMonitor: ObservableObject {
     }
     
     private func updateTopProcesses() async {
-        topCPUProcesses = await ProcessStats.getTopCPUProcesses(count: 5)
+        topCPUProcesses = await ProcessStats.getTopCPUProcesses(count: AppConfig.topCPUProcessCount)
     }
 }

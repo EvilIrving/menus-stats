@@ -96,7 +96,7 @@ struct OverviewTabView: View {
                         // Disk
                         HStack(spacing: 4) {
                             Image(systemName: "internaldrive.fill")
-                            Text(ByteFormatter.format(monitor.diskAvailable))
+                            Text(ByteFormatter.formatDisk(monitor.diskAvailable))
                         }
                     }
                     .font(.system(size: 11, weight: .medium))

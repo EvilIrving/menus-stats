@@ -1,121 +1,121 @@
 # Light Stats
 
-一款轻量级的 macOS 状态栏系统监控工具，让你在 3 秒内知道系统当前状态。
+## 一、 产品概述
 
-![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
-![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
-![License](https://img.shields.io/badge/License-MIT-green)
+Light Stats 是一款常驻 macOS 状态栏的轻量级系统监控工具。它旨在为用户提供实时、克制且准确的系统状态感知，帮助用户快速了解 CPU、GPU、内存、磁盘和网络等核心指标，并能在必要时快速清理内存资源。
 
-## 特性
+### 1. 设计哲学
 
-- **状态栏常驻** - 随时查看系统状态，无需打开额外窗口
-- **信息精准** - CPU、GPU、内存、磁盘、网络、风扇转速一目了然
-- **克制设计** - 只读为主，操作极简，不替代活动监视器
-- **原生体验** - 纯 Swift + SwiftUI 开发，支持深色/浅色模式
+- **快速感知**：信息触手可及，无需打开独立窗口。
+- **展示克制**：固定布局，避免界面抖动；仅展示关键指标。
+- **只读为主**：侧重于状态监控，仅提供必要的资源释放（清理）操作。
+- **模块化设计**：基于协议和依赖注入，支持高度扩展性和可测试性。
 
-## 截图
+---
 
-状态栏显示：
+## 二、 核心功能与页面
 
-```
-◉  62%  41%  59%  164 GB  ↑7.5 KB/s
-   CPU  GPU  MEM  DISK    ↓9.0 KB/s
-```
+### 1. 状态栏 (Status Bar)
 
-## 功能
+- **形态**：常驻系统菜单栏，由一个图标 (Logo) 和若干监控项组成。
+- **布局**：采用**双行上下结构**。
+  - **上方**：显示数值（如 `62%`、`99 GB`），使用 11pt 等宽数字字体。
+  - **下方**：显示标签（如 `CPU`、`DISK`），使用 8pt 字体，颜色较浅。
+  - **网络项**：上方显示上传速度（↑），下方显示下载速度（↓），使用 10pt 等宽字体。
+- **固定宽度**：为防止数值变化导致抖动，每个格子使用固定宽度（如 CPU 26pt, Disk 46pt）。
+- **动态显示**：用户可在设置中自由开关各显示项（Logo, CPU, GPU, MEM, Disk, Net, Fan）。
 
-### 状态栏监控项
+### 2. 弹窗面板 (Popover)
 
-| 项目 | 说明 |
-|------|------|
-| Logo | 应用图标 |
-| CPU | CPU 总使用率 |
-| GPU | GPU 利用率 |
-| MEM | 内存使用率 |
-| DISK | 磁盘可用空间 |
-| NET | 实时网络上传/下载速度 |
-| FAN | 风扇转速 |
+点击状态栏项后弹出，包含两个主要 Tab：
 
-### 概览面板
+- **概览 (Overview)**：
+  - 环形进度条展示 CPU、GPU、内存使用率。
+  - 核心使用率列表（支持多核显示，带颜色渐变）。
+  - 实时网络上传/下载曲线或数值。
+  - 磁盘空间（可用/总量）及风扇转速、温度显示。
+- **清理 (Cleanup)**：
+  - 内存压力概览。
+  - 运行中 App 列表（按内存占用降序排列）。
+  - 支持正常关闭应用和强制退出应用（弹出二次确认）。
 
-- **圆环图表** - CPU、GPU、内存使用率可视化
-- **系统状态** - 温度、风扇转速、磁盘空间、网络速度
-- **核心监控** - 各 CPU 核心使用率详情（可滚动查看）
+### 3. 设置页面 (Settings)
 
-### 清理释放
+- **显示控制**：勾选/取消状态栏监控项。
+- **刷新频率**：低 (5s) / 中 (2s) / 高 (1s)。
+- **单位偏好**：温度（℃/℉）、网速（自动/KB/s/MB/s）。
+- **多语言支持**：支持**简体中文**、**English**、**日本語**，并可跟随系统。
 
-- **内存占用排行** - 按内存占用从大到小排列运行中的 App
-- **快速关闭** - 悬浮显示关闭按钮，支持温和关闭和强制终止
-- **进程合并** - 自动合并多进程应用（如 Electron 应用）
+---
 
-### 设置
+## 三、 架构设计与技术栈
 
-- 自定义状态栏显示项（至少保留 1 项）
-- 刷新频率：低 / 中 / 高
-- 温度单位：℃ / ℉
-- 网速单位：KB/s / MB/s
+### 1. 技术栈
 
-## 系统要求
+- **语言**：Swift 5.9+
+- **框架**：SwiftUI (Popover/Settings) + AppKit (Status Item/Drawing)
+- **异步处理**：Combine (数据流订阅) + Swift Concurrency (async/await)
+- **最低版本**：macOS 14 (Sonoma)
+- **数据源**：Mach API (CPU/MEM), IOKit (GPU), SMC (Temp/Fan), getifaddrs (Network).
 
-- macOS 14.0 (Sonoma) 或更高版本
-- Apple Silicon 或 Intel 处理器
+### 2. 核心架构模式
 
-## 安装
+- **Module & Reader 模式**：每个监控维度（CPU, MEM等）有独立的数据读取器和管理类。
+- **协议抽象 (Protocol-based Design)**：核心服务（如 `ProcessService`）和配置（`SettingsManaging`）均定义协议，实现调用方与具体实现的解耦。
+- **依赖注入 (Dependency Injection)**：通过构造函数或字段注入实例，提升代码的可测试性。
+- **统一配置 (Global Config)**：使用 `AppConfig` 集中管理全局常量（如 Top N 进程数、默认刷新率）。
 
-### 从源码构建
+---
 
-1. 克隆仓库：
+## 四、 实现状态追踪 (Updated: 2026-01-16)
 
-```bash
-git clone https://github.com/EvilIrving/menus-stats.git
-cd menus-stats
-```
+### 1. 状态栏
 
-1. 使用 Xcode 打开项目：
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| NSStatusItem 基础框架 | ✅ 已完成 | `AppDelegate` 管理 |
+| 双行显示布局（值+标签） | ✅ 已完成 | `StatusBarView` 绘制 |
+| 固定宽度格子（防止抖动） | ✅ 已完成 | 预设各项目宽度 |
+| 动态显示项开关 | ✅ 已完成 | 设置项与 UI 联动 |
+| 至少显示一项校验 | ✅ 已完成 | 防止菜单栏空白 |
+| 风扇模拟旋转动画 | ❌ 未实现 | 计划中 |
 
-```bash
-open "Light Stats.xcodeproj"
-```
+### 2. Popover 弹窗
 
-1. 选择目标设备后点击 Run 或按 `Cmd + R` 构建运行
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 双 Tab 结构 | ✅ 已完成 | 概览 / 清理 |
+| 环形进度条 (RingView) | ✅ 已完成 | 支持渐变色 |
+| 核心使用率列表 | ✅ 已完成 | 自动适配多核心 |
+| 进程内存排序与分组 | ✅ 已完成 | `AppMemoryManager` 实现 |
+| 强制退出应用功能 | ✅ 已完成 | 带二次确认 Alert |
+| 10 秒自动关闭 | ❌ 未实现 | 当前仅支持点击外部关闭 |
 
-## 技术栈
+### 3. 全局特性
 
-- **语言**: Swift 5.9+
-- **UI**: SwiftUI + AppKit (NSStatusItem)
-- **系统接口**:
-  - Mach API (CPU 统计)
-  - IOKit (GPU、SMC 温度/风扇)
-  - NSRunningApplication (进程管理)
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 多语言 (i18n) | ✅ 已完成 | 中/英/日 切换 |
+| 依赖注入重构 | ✅ 已完成 | 提升了核心组件的解耦 |
+| 统一配置收口 (AppConfig) | ✅ 已完成 | 消除硬编码魔术字 |
+| 温度单位切换 | ✅ 已完成 | 摄氏度 / 华氏度 |
 
-## 项目结构
+---
 
-```
-Light Stats/
-├── Light Stats/
-│   ├── AppDelegate.swift      # 应用入口、状态栏和弹出窗口管理
-│   ├── SystemMonitor.swift    # 系统监控核心（CPU/GPU/内存/磁盘/网络）
-│   ├── AppMemoryManager.swift # 应用内存管理
-│   ├── SettingsManager.swift  # 设置管理
-│   ├── SettingsView.swift     # 设置界面
-│   ├── Assets.xcassets/       # 图标资源
-│   └── LightStatsApp.swift    # App 结构定义
-└── Light Stats.xcodeproj/      # Xcode 项目配置
-```
+## 五、 文件结构参考
 
-## 设计理念
+- `Models/`: 基础数据结构（CPUInfo, DiskInfo 等）。
+- `Services/`: 系统级数据采集（ProcessService, SMCInfo）。
+- `ViewModels/`: 业务逻辑与状态管理（SystemMonitor, AppMemoryManager, SettingsManager）。
+- `Views/`:
+  - `StatusBar/`: 状态栏绘图逻辑。
+  - `Popover/`: 弹窗面板组件与 Tab 视图。
+  - `Settings/`: 设置页面 UI。
+- `Resources/`: 国际化资源文件 (`Localizable.strings`)。
+- `Utilities/`: 格式化工具与通用辅助方法。
 
-> 不是"什么都管"，而是让用户在 3 秒内知道：系统现在正不正常。
+---
 
-- **状态栏优先** - 信息常驻可见
-- **统计只读为主** - 展示状态，不修改系统
-- **操作极度克制** - 仅提供关闭 App 的能力
+## 六、 总结
 
-## 非目标
-
-- ❌ 不提供自动清理
-- ❌ 不修改系统参数
-- ❌ 不常驻后台扫描
-- ❌ 不替代活动监视器
-
- 
+Light Stats 已从一个简单的原型演进为具备生产力属性的系统工具。通过引入协议抽象和多语言支持，项目在代码质量和用户体验上达到了新的高度。未来的重点将放在交互细节的打磨（如动画、自动关闭逻辑）以及更多监控指标的覆盖上。

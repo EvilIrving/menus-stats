@@ -15,6 +15,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var popover: NSPopover?
     private var cancellables = Set<AnyCancellable>()
     private var statusBarView: StatusBarView?
+    
+    private let settings: SettingsManager
+    private let monitor: SystemMonitor
+    
+    override init() {
+        self.settings = SettingsManager.shared
+        self.monitor = SystemMonitor.shared
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
@@ -26,7 +35,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupStatusItem() {
         // Calculate initial width based on enabled items
-        let settings = SettingsManager.shared
         let initialWidth = StatusBarView.calculateWidth(settings: settings)
 
         statusItem = NSStatusBar.system.statusItem(withLength: initialWidth)
@@ -52,7 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover?.behavior = .transient
         popover?.contentViewController = NSHostingController(
             rootView: PopoverContentView()
-                .environmentObject(SystemMonitor.shared)
+                .environmentObject(monitor)
         )
     }
 
@@ -62,15 +70,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Debug SMC access
         SMCInfo.debugSMC()
 
-        let monitor = SystemMonitor.shared
-        let settings = SettingsManager.shared
         monitor.startMonitoring(interval: settings.refreshRate.interval)
 
         // 监听刷新频率变化，重新启动监控
         settings.$refreshRate
             .dropFirst()  // 跳过初始值
             .receive(on: DispatchQueue.main)
-            .sink { [weak monitor] newRate in
+            .sink { [weak monitor = self.monitor] newRate in
                 monitor?.startMonitoring(interval: newRate.interval)
             }
             .store(in: &cancellables)
@@ -116,8 +122,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         download: Double,
         fan: Int?
     ) {
-        let settings = SettingsManager.shared
-
         // Update status bar view
         statusBarView?.updateValues(
             cpu: cpu,

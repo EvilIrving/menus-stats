@@ -8,9 +8,28 @@
 import Foundation
 import Combine
 
+enum AppConfig {
+    static let topCPUProcessCount: Int = 5
+    static let topMemoryProcessCount: Int = 150
+    static let appMemoryRefreshInterval: TimeInterval = 5.0
+}
+
 /// User settings for the menu stats app
+protocol SettingsManaging: ObservableObject {
+    var showLogo: Bool { get set }
+    var showCPU: Bool { get set }
+    var showGPU: Bool { get set }
+    var showMemory: Bool { get set }
+    var showDisk: Bool { get set }
+    var showNetwork: Bool { get set }
+    var showFan: Bool { get set }
+    var refreshRate: SettingsManager.RefreshRate { get set }
+    var temperatureUnit: SettingsManager.TemperatureUnit { get set }
+    var networkSpeedUnit: SettingsManager.NetworkSpeedUnit { get set }
+}
+
 @MainActor
-final class SettingsManager: ObservableObject {
+final class SettingsManager: ObservableObject, SettingsManaging {
     
     // MARK: - Status Bar Display Settings
     

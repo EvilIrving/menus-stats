@@ -12,7 +12,7 @@ enum ByteFormatter {
     static func format(_ bytes: UInt64) -> String {
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useGB, .useMB]
-        formatter.countStyle = .file
+        formatter.countStyle = .memory  // 改为 .memory 使用二进制 (1 GB = 1024³ bytes)
         return formatter.string(fromByteCount: Int64(bytes))
     }
 
