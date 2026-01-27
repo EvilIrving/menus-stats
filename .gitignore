@@ -12,6 +12,7 @@ build/
 Packages/
 Package.resolved
 build/
+# port-killer-main/
 
 # CocoaPods
 Pods/

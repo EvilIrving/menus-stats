@@ -25,6 +25,8 @@ protocol ProcessServiceProtocol {
     func triggerMemoryCleanup() async
     func terminateApp(_ app: AppGroup) -> Bool
     func forceTerminateApp(_ app: AppGroup) -> Bool
+    func terminateAppAsync(_ app: AppGroup) async -> Bool
+    func isProcessAlive(_ pid: pid_t) -> Bool
 }
 
 final class ProcessService: ProcessServiceProtocol {
@@ -227,6 +229,89 @@ final class ProcessService: ProcessServiceProtocol {
     }
     
     // MARK: - Process Control
+    
+    /// Check if a process is still alive
+    func isProcessAlive(_ pid: pid_t) -> Bool {
+        return kill(pid, 0) == 0
+    }
+    
+    /// Kill a process using system kill command (more reliable than NSRunningApplication)
+    /// - Parameters:
+    ///   - pid: Process ID to kill
+    ///   - force: If true, sends SIGKILL (-9), otherwise SIGTERM (-15)
+    /// - Returns: True if kill command executed successfully
+    private func killProcessWithCommand(pid: pid_t, force: Bool = false) -> Bool {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/kill")
+        process.arguments = [force ? "-9" : "-15", String(pid)]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            return process.terminationStatus == 0
+        } catch {
+            return false
+        }
+    }
+    
+    /// Gracefully terminate a process with fallback to force kill
+    /// Strategy: SIGTERM → wait 500ms → SIGKILL (borrowed from port-killer)
+    /// - Parameter pid: Process ID to terminate
+    /// - Returns: True if process was terminated
+    private func killProcessGracefully(pid: pid_t) async -> Bool {
+        guard isProcessAlive(pid) else {
+            return true
+        }
+        
+        let graceful = killProcessWithCommand(pid: pid, force: false)
+        if graceful {
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        
+        guard isProcessAlive(pid) else {
+            return true
+        }
+        
+        return killProcessWithCommand(pid: pid, force: true)
+    }
+    
+    /// Async version of terminate that provides reliable process termination
+    /// Uses two-stage strategy: graceful first, then force kill
+    func terminateAppAsync(_ app: AppGroup) async -> Bool {
+        if let mainApp = NSRunningApplication(processIdentifier: app.id) {
+            let terminated = mainApp.terminate()
+            if terminated {
+                try? await Task.sleep(for: .milliseconds(300))
+                
+                if !isProcessAlive(app.id) {
+                    await terminateSurvivingChildrenAsync(app.allPids)
+                    return true
+                }
+            }
+        }
+        
+        var success = await killProcessGracefully(pid: app.id)
+        
+        for pid in app.allPids where pid != app.id {
+            if isProcessAlive(pid) {
+                let childSuccess = await killProcessGracefully(pid: pid)
+                success = success && childSuccess
+            }
+        }
+        
+        return success
+    }
+    
+    /// Async version of child process cleanup
+    private func terminateSurvivingChildrenAsync(_ pids: [pid_t]) async {
+        for pid in pids {
+            if isProcessAlive(pid) {
+                _ = await killProcessGracefully(pid: pid)
+            }
+        }
+    }
     
     /// Trigger system memory cleanup
     /// Uses memory pressure simulation to encourage system to release purgeable memory

@@ -11,6 +11,7 @@ struct CleanupTabView: View {
     @StateObject private var appManager = AppMemoryManager.shared
     @State private var showForceTerminateAlert = false
     @State private var appToTerminate: RunningApp?
+    @State private var terminatingApps: Set<Int32> = []
 
     var body: some View {
         VStack(spacing: 12) {
@@ -97,7 +98,10 @@ struct CleanupTabView: View {
                 ScrollView {
                     VStack(spacing: 8) {
                         ForEach(appManager.runningApps) { app in
-                            AppCardView(app: app) {
+                            AppCardView(
+                                app: app,
+                                isTerminating: terminatingApps.contains(app.id)
+                            ) {
                                 terminateApp(app)
                             }
                         }
@@ -173,10 +177,21 @@ struct CleanupTabView: View {
     // MARK: - Actions
 
     private func terminateApp(_ app: RunningApp) {
-        let success = appManager.terminateApp(app)
-        if !success {
-            appToTerminate = app
-            showForceTerminateAlert = true
+        guard !terminatingApps.contains(app.id) else { return }
+        
+        terminatingApps.insert(app.id)
+        
+        Task {
+            let success = await appManager.terminateAppAsync(app)
+            
+            await MainActor.run {
+                terminatingApps.remove(app.id)
+                
+                if !success && appManager.isProcessAlive(app.id) {
+                    appToTerminate = app
+                    showForceTerminateAlert = true
+                }
+            }
         }
     }
 }

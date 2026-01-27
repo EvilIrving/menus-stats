@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AppCardView: View {
     let app: RunningApp
+    var isTerminating: Bool = false
     let onClose: () -> Void
 
     @State private var isHovered = false
@@ -20,11 +21,13 @@ struct AppCardView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 28, height: 28)
+                .opacity(isTerminating ? 0.5 : 1.0)
 
             // App Name
             Text(app.displayName)
                 .font(.system(size: 13, weight: .medium))
                 .lineLimit(1)
+                .opacity(isTerminating ? 0.5 : 1.0)
 
             Spacer()
 
@@ -32,15 +35,22 @@ struct AppCardView: View {
             Text(app.memoryFormatted)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.secondary)
+                .opacity(isTerminating ? 0.5 : 1.0)
 
-            // Close Button
-            Button(action: onClose) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 16))
-                    .foregroundColor(isHovered ? .red.opacity(0.8) : .secondary.opacity(0.4))
+            // Close Button or Loading Indicator
+            if isTerminating {
+                ProgressView()
+                    .controlSize(.small)
+                    .frame(width: 16, height: 16)
+            } else {
+                Button(action: onClose) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(isHovered ? .red.opacity(0.8) : .secondary.opacity(0.4))
+                }
+                .buttonStyle(.plain)
+                .help("关闭应用")
             }
-            .buttonStyle(.plain)
-            .help("关闭应用")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -57,5 +67,6 @@ struct AppCardView: View {
                 isHovered = hovering
             }
         }
+        .allowsHitTesting(!isTerminating)
     }
 }

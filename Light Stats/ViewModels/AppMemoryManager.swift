@@ -43,12 +43,13 @@ final class AppMemoryManager: ObservableObject {
         NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil) ?? NSImage()
     }()
     
-    private init(processService: ProcessServiceProtocol = ProcessService.shared) {
-        self.processService = processService
+    private init(processService: ProcessServiceProtocol? = nil) {
+        self.processService = processService ?? ProcessService.shared
         totalMemory = ProcessInfo.processInfo.physicalMemory
     }
     
-    func startMonitoring(interval: TimeInterval = AppConfig.appMemoryRefreshInterval) {
+    func startMonitoring(interval: TimeInterval? = nil) {
+        let refreshInterval = interval ?? AppConfig.appMemoryRefreshInterval
         stopMonitoring()
         
         // Initial update
@@ -57,7 +58,7 @@ final class AppMemoryManager: ObservableObject {
         }
         
         // Periodic updates
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 await self?.updateRunningApps()
             }
@@ -278,5 +279,18 @@ final class AppMemoryManager: ObservableObject {
     func forceTerminateApp(_ app: AppGroup) -> Bool {
         processService.forceTerminateApp(app)
     }
+    
+    /// Async terminate with reliable two-stage strategy
+    func terminateAppAsync(_ app: AppGroup) async -> Bool {
+        let success = await processService.terminateAppAsync(app)
+        if success {
+            await updateRunningApps()
+        }
+        return success
+    }
+    
+    /// Check if a process is still running
+    func isProcessAlive(_ pid: pid_t) -> Bool {
+        processService.isProcessAlive(pid)
+    }
 }
-

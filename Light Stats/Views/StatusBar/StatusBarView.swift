@@ -66,7 +66,7 @@ final class StatusBarView: NSView {
         upload: Double,
         download: Double,
         fan: Int?,
-        settings: SettingsManaging
+        settings: any SettingsManaging
     ) {
         displayItems.removeAll()
 
@@ -146,7 +146,7 @@ final class StatusBarView: NSView {
         needsDisplay = true
     }
 
-    static func calculateWidth(settings: SettingsManaging) -> CGFloat {
+    static func calculateWidth(settings: any SettingsManaging) -> CGFloat {
         var width: CGFloat = 0
         var itemCount = 0
 

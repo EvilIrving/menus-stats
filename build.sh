@@ -3,9 +3,13 @@ set -e
 
 PROJECT="Light Stats.xcodeproj"
 SCHEME="Light Stats"
+APP_NAME="Light Stats"
+VERSION="1.0.0"
 BUILD_DIR="build"
 OUTPUT_DIR="$BUILD_DIR/output"
 LOG_FILE="$BUILD_DIR/build.log"
+DMG_DIR="$BUILD_DIR/dmg_temp"
+DMG_FILE="$OUTPUT_DIR/${APP_NAME}-${VERSION}.dmg"
 
 echo "🔍 检查 Xcode 环境..."
 if ! command -v xcodebuild &> /dev/null; then
@@ -31,10 +35,28 @@ xcodebuild build \
 
 echo "📦 创建输出目录..."
 mkdir -p "$OUTPUT_DIR"
-cp -R "$BUILD_DIR/DerivedData/Build/Products/Release/Light Stats.app" "$OUTPUT_DIR/"
+cp -R "$BUILD_DIR/DerivedData/Build/Products/Release/$APP_NAME.app" "$OUTPUT_DIR/"
 
-echo "✅ 构建完成！"
-echo "📍 输出位置: $OUTPUT_DIR/Light Stats.app"
-# echo ""
-# echo "安装到 Applications 目录："
-# echo "  cp -R \"$OUTPUT_DIR/Light Stats.app\" /Applications/"
+# 确保可执行文件有执行权限
+chmod +x "$OUTPUT_DIR/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+
+echo "✅ App 构建完成！"
+echo "📍 App 位置: $OUTPUT_DIR/$APP_NAME.app"
+echo ""
+
+echo "📀 开始创建 DMG 安装包..."
+rm -rf "$DMG_DIR"
+mkdir -p "$DMG_DIR"
+
+cp -R "$OUTPUT_DIR/$APP_NAME.app" "$DMG_DIR/"
+ln -s /Applications "$DMG_DIR/Applications"
+
+hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_DIR" -ov -format UDZO "$DMG_FILE"
+
+rm -rf "$DMG_DIR"
+
+echo ""
+echo "✅ 全部完成！"
+echo "📍 App 位置: $OUTPUT_DIR/$APP_NAME.app"
+echo "📍 DMG 位置: $DMG_FILE"
+echo "📋 DMG 大小: $(du -h "$DMG_FILE" | cut -f1)"
