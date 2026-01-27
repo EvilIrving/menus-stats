@@ -1,10 +1,20 @@
-# !/bin/bash
+#!/bin/bash
 set -e
 
 PROJECT="Light Stats.xcodeproj"
 SCHEME="Light Stats"
 APP_NAME="Light Stats"
-VERSION="1.0.0"
+
+# 版本号优先级: 环境变量 > git tag > 默认值
+if [ -n "$VERSION" ]; then
+    echo "📌 使用环境变量版本号: $VERSION"
+elif git describe --tags --exact-match 2>/dev/null; then
+    VERSION=$(git describe --tags --exact-match 2>/dev/null | sed 's/^v//')
+    echo "📌 使用 git tag 版本号: $VERSION"
+else
+    VERSION="1.0.0-dev"
+    echo "📌 使用默认版本号: $VERSION"
+fi
 BUILD_DIR="build"
 OUTPUT_DIR="$BUILD_DIR/output"
 LOG_FILE="$BUILD_DIR/build.log"
