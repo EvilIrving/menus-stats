@@ -95,7 +95,7 @@ struct CleanupTabView: View {
             if appManager.runningApps.isEmpty {
                 emptyStateView
             } else {
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 8) {
                         ForEach(appManager.runningApps) { app in
                             AppCardView(
@@ -109,7 +109,6 @@ struct CleanupTabView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
                 }
-                .scrollIndicators(.hidden)
             }
         }
         .onAppear {

@@ -11,7 +11,7 @@ struct OverviewTabView: View {
     @EnvironmentObject var monitor: SystemMonitor
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 12) {
                 // Main Metrics Grid
                 LazyVGrid(columns: [
@@ -164,7 +164,6 @@ struct OverviewTabView: View {
             }
             .padding(16)
         }
-        .scrollIndicators(.hidden)
     }
 
     // MARK: - Helper: Sorted Cores

@@ -13,7 +13,7 @@ struct SettingsView: View {
     @State private var showMinimumItemAlert = false
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
                 // Status Bar Items Card
                 BentoCard(title: "settings.statusBar".localized, icon: "menubar.rectangle") {
